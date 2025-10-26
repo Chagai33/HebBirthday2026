@@ -64,7 +64,15 @@
     "upcomingBirthdays": "ימי הולדת קרובים",
     "addToCalendar": "הוסף ליומן",
     "addToGoogleCalendar": "הוסף ליומן Google",
-    "exportSelected": "ייצא נבחרים"
+    "exportSelected": "ייצא נבחרים",
+    "refresh": "רענן תאריכים עבריים",
+    "refreshLimitReached": "יותר מדי רענונים. המתן 30 שניות",
+    "refreshError": "שגיאה ברענון הנתונים",
+    "futureBirthdays": "ימי הולדת עבריים קרובים",
+    "next10Years": "עשר השנים הבאות",
+    "noFutureDates": "אין תאריכים זמינים",
+    "next": "הבא",
+    "past": "עבר"
   },
   "dashboard": {
     "dashboard": "לוח בקרה",

@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Birthday } from '../../types';
 import { format } from 'date-fns';
 import { he, enUS } from 'date-fns/locale';
-import { useDeleteBirthday, useArchiveBirthday } from '../../hooks/useBirthdays';
-import { Edit, Trash2, Archive, Calendar, Search, CalendarDays } from 'lucide-react';
+import { useDeleteBirthday, useArchiveBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
+import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 
 interface BirthdayListProps {
@@ -21,6 +21,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const { t, i18n } = useTranslation();
   const deleteBirthday = useDeleteBirthday();
   const archiveBirthday = useArchiveBirthday();
+  const refreshHebrewData = useRefreshHebrewData();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
@@ -76,6 +77,18 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 
   const handleArchive = async (id: string) => {
     await archiveBirthday.mutateAsync(id);
+  };
+
+  const handleRefresh = async (id: string) => {
+    try {
+      await refreshHebrewData.mutateAsync(id);
+    } catch (error: any) {
+      if (error.code === 'functions/resource-exhausted') {
+        alert(t('birthday.refreshLimitReached', 'יותר מדי רענונים. המתן 30 שניות.'));
+      } else {
+        alert(t('birthday.refreshError', 'שגיאה ברענון הנתונים'));
+      }
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -234,6 +247,14 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleRefresh(birthday.id)}
+                          disabled={refreshHebrewData.isPending}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={t('birthday.refresh', 'רענן תאריכים עבריים')}
+                        >
+                          <RefreshCw className={`w-4 h-4 ${refreshHebrewData.isPending ? 'animate-spin' : ''}`} />
+                        </button>
                         {onAddToCalendar && (
                           <button
                             onClick={() => onAddToCalendar(birthday)}

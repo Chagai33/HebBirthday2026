@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateNextBirthdayScheduled = exports.onBirthdayWrite = void 0;
+exports.fixExistingBirthdays = exports.updateNextBirthdayScheduled = exports.refreshBirthdayHebrewData = exports.onBirthdayWrite = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
@@ -150,6 +150,77 @@ exports.onBirthdayWrite = functions.firestore
         throw error;
     }
 });
+exports.refreshBirthdayHebrewData = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const birthdayId = data.birthdayId;
+    if (!birthdayId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Birthday ID is required');
+    }
+    const rateLimitRef = db.collection('rate_limits').doc(`${context.auth.uid}_refresh`);
+    const rateLimitDoc = await rateLimitRef.get();
+    const now = Date.now();
+    const windowMs = 30000; // 30 seconds
+    const maxRequests = 3;
+    if (rateLimitDoc.exists) {
+        const data = rateLimitDoc.data();
+        const requests = (data === null || data === void 0 ? void 0 : data.requests) || [];
+        const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
+        if (recentRequests.length >= maxRequests) {
+            throw new functions.https.HttpsError('resource-exhausted', 'Too many refresh requests. Please wait 30 seconds.');
+        }
+        await rateLimitRef.update({
+            requests: [...recentRequests, now],
+        });
+    }
+    else {
+        await rateLimitRef.set({
+            requests: [now],
+        });
+    }
+    try {
+        const birthdayRef = db.collection('birthdays').doc(birthdayId);
+        const birthdayDoc = await birthdayRef.get();
+        if (!birthdayDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Birthday not found');
+        }
+        const birthdayData = birthdayDoc.data();
+        if ((birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.tenant_id) !== data.tenantId) {
+            throw new functions.https.HttpsError('permission-denied', 'Access denied');
+        }
+        const birthDateStr = birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.birth_date_gregorian;
+        if (!birthDateStr) {
+            throw new functions.https.HttpsError('failed-precondition', 'No birth date found');
+        }
+        const birthDate = new Date(birthDateStr);
+        const afterSunset = (birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.after_sunset) || false;
+        const hebcalData = await fetchHebcalData(birthDate, afterSunset);
+        if (!hebcalData.hebrew) {
+            throw new functions.https.HttpsError('internal', 'Failed to fetch Hebrew date');
+        }
+        const futureDates = await fetchNextHebrewBirthdays(hebcalData.hy, hebcalData.hm, hebcalData.hd, 10);
+        const updateData = {
+            birth_date_hebrew_string: hebcalData.hebrew,
+            birth_date_hebrew_year: hebcalData.hy,
+            birth_date_hebrew_month: hebcalData.hm,
+            birth_date_hebrew_day: hebcalData.hd,
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        if (futureDates.length > 0) {
+            const nextDate = futureDates[0];
+            updateData.next_upcoming_hebrew_birthday = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+            updateData.future_hebrew_birthdays = futureDates.map((date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`);
+        }
+        await birthdayRef.update(updateData);
+        functions.logger.log(`Successfully refreshed Hebrew dates for birthday ${birthdayId}`);
+        return { success: true, message: 'Hebrew dates refreshed successfully' };
+    }
+    catch (error) {
+        functions.logger.error('Error refreshing Hebrew dates:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to refresh Hebrew dates');
+    }
+});
 exports.updateNextBirthdayScheduled = functions.pubsub
     .schedule('every 24 hours')
     .timeZone('Asia/Jerusalem')
@@ -213,5 +284,17 @@ exports.updateNextBirthdayScheduled = functions.pubsub
         functions.logger.error('Error in scheduled birthday update:', error);
         throw error;
     }
+});
+exports.fixExistingBirthdays = functions.https.onRequest(async (req, res) => {
+    const snapshot = await db.collection('birthdays').get();
+    for (const doc of snapshot.docs) {
+        const data = doc.data();
+        if (data.birth_date_hebrew_string && !data.next_upcoming_hebrew_birthday) {
+            await doc.ref.update({
+                birth_date_hebrew_string: null,
+            });
+        }
+    }
+    res.send('Done');
 });
 //# sourceMappingURL=index.js.map

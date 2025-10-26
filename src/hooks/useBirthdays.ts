@@ -3,6 +3,7 @@ import { birthdayService } from '../services/birthday.service';
 import { BirthdayFormData } from '../types';
 import { useTenant } from '../contexts/TenantContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 export const useBirthdays = (includeArchived = false) => {
   const { currentTenant } = useTenant();
@@ -128,6 +129,32 @@ export const useCheckDuplicates = () => {
         firstName,
         lastName
       );
+    },
+  });
+};
+
+export const useRefreshHebrewData = () => {
+  const queryClient = useQueryClient();
+  const { currentTenant } = useTenant();
+
+  return useMutation({
+    mutationFn: async (birthdayId: string) => {
+      if (!currentTenant) throw new Error('No tenant');
+
+      const functions = getFunctions();
+      const refreshFunction = httpsCallable(functions, 'refreshBirthdayHebrewData');
+
+      const result = await refreshFunction({
+        birthdayId,
+        tenantId: currentTenant.id,
+      });
+
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['birthdays'] });
+      queryClient.invalidateQueries({ queryKey: ['upcomingBirthdays'] });
+      queryClient.invalidateQueries({ queryKey: ['birthday'] });
     },
   });
 };
