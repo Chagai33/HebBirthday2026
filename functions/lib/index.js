@@ -105,19 +105,36 @@ async function fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, year
 exports.onBirthdayWrite = functions.firestore
     .document('birthdays/{birthdayId}')
     .onWrite(async (change, context) => {
+    const beforeData = change.before.exists ? change.before.data() : null;
     const afterData = change.after.exists ? change.after.data() : null;
     if (!afterData) {
         return null;
     }
-    if (afterData.birth_date_hebrew_string &&
-        afterData.next_upcoming_hebrew_birthday &&
-        afterData.future_hebrew_birthdays &&
-        afterData.future_hebrew_birthdays.length > 0) {
-        functions.logger.log('Birthday already has Hebrew data, skipping calculation');
-        return null;
-    }
     if (!afterData.birth_date_gregorian) {
         functions.logger.warn('No birth_date_gregorian found, skipping');
+        return null;
+    }
+    const hasHebrewData = afterData.birth_date_hebrew_string &&
+        afterData.birth_date_hebrew_year &&
+        afterData.birth_date_hebrew_month &&
+        afterData.birth_date_hebrew_day &&
+        afterData.next_upcoming_hebrew_birthday &&
+        afterData.future_hebrew_birthdays &&
+        afterData.future_hebrew_birthdays.length > 0;
+    if (beforeData) {
+        const birthDateChanged = beforeData.birth_date_gregorian !== afterData.birth_date_gregorian;
+        const afterSunsetChanged = beforeData.after_sunset !== afterData.after_sunset;
+        if (!birthDateChanged && !afterSunsetChanged) {
+            functions.logger.log('No relevant changes detected, skipping calculation');
+            return null;
+        }
+        if (hasHebrewData && !birthDateChanged && !afterSunsetChanged) {
+            functions.logger.log('Birthday already has Hebrew data and no changes, skipping calculation');
+            return null;
+        }
+    }
+    if (hasHebrewData && !beforeData) {
+        functions.logger.log('New birthday already has Hebrew data, skipping calculation');
         return null;
     }
     try {
