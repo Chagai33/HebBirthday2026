@@ -154,11 +154,15 @@ exports.onBirthdayWrite = functions.firestore
         const birthDateStr = afterData.birth_date_gregorian;
         const birthDate = new Date(birthDateStr);
         const afterSunset = afterData.after_sunset || false;
+        functions.logger.log(`Processing birthday ${context.params.birthdayId}: ${birthDateStr}, afterSunset: ${afterSunset}`);
         const hebcalData = await fetchHebcalData(birthDate, afterSunset);
+        functions.logger.log(`Hebcal data received:`, JSON.stringify(hebcalData));
         if (!hebcalData.hebrew) {
             throw new Error('No Hebrew date returned from Hebcal');
         }
+        functions.logger.log(`Fetching next birthdays for: year=${hebcalData.hy}, month=${hebcalData.hm}, day=${hebcalData.hd}`);
         const futureDates = await fetchNextHebrewBirthdays(hebcalData.hy, hebcalData.hm, hebcalData.hd, 10);
+        functions.logger.log(`Future dates returned: ${futureDates.length} dates`);
         const updateData = {
             birth_date_hebrew_string: hebcalData.hebrew,
             birth_date_hebrew_year: hebcalData.hy,
