@@ -239,3 +239,18 @@ export const updateNextBirthdayScheduled = functions.pubsub
       throw error;
     }
   });
+
+export const fixExistingBirthdays = functions.https.onRequest(async (req, res) => {
+  const snapshot = await db.collection('birthdays').get();
+  
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    if (data.birth_date_hebrew_string && !data.next_upcoming_hebrew_birthday) {
+      await doc.ref.update({
+        birth_date_hebrew_string: null,
+      });
+    }
+  }
+  
+  res.send('Done');
+});
