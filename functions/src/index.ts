@@ -56,8 +56,35 @@ async function fetchHebcalData(
   }
 }
 
+async function getCurrentHebrewYear(): Promise<number> {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  const params = new URLSearchParams({
+    cfg: 'json',
+    gy: year.toString(),
+    gm: month,
+    gd: day,
+    g2h: '1',
+  });
+
+  try {
+    const response = await fetch(`https://www.hebcal.com/converter?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to get current Hebrew year');
+    }
+    const data = await response.json();
+    return data.hy;
+  } catch (error) {
+    functions.logger.error('Error getting current Hebrew year:', error);
+    throw error;
+  }
+}
+
 async function fetchNextHebrewBirthdays(
-  hebrewYear: number,
+  startHebrewYear: number,
   hebrewMonth: string,
   hebrewDay: number,
   yearsAhead: number = 10
@@ -66,13 +93,14 @@ async function fetchNextHebrewBirthdays(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  functions.logger.log(`Fetching future dates for Hebrew: ${hebrewYear}/${hebrewMonth}/${hebrewDay}`);
+  functions.logger.log(`Fetching future dates starting from Hebrew year: ${startHebrewYear}, month: ${hebrewMonth}, day: ${hebrewDay}`);
 
   const fetchPromises = [];
   for (let i = 0; i <= yearsAhead; i++) {
+    const yearToFetch = startHebrewYear + i;
     const params = new URLSearchParams({
       cfg: 'json',
-      hy: (hebrewYear + i).toString(),
+      hy: yearToFetch.toString(),
       hm: hebrewMonth,
       hd: hebrewDay.toString(),
       h2g: '1',
@@ -83,7 +111,7 @@ async function fetchNextHebrewBirthdays(
       fetch(url)
         .then((response) => {
           if (!response.ok) {
-            functions.logger.warn(`Response not OK for year ${hebrewYear + i}: ${response.status}`);
+            functions.logger.warn(`Response not OK for year ${yearToFetch}: ${response.status}`);
             return null;
           }
           return response.json();
@@ -92,6 +120,7 @@ async function fetchNextHebrewBirthdays(
           if (data && data.gy && data.gm && data.gd) {
             const date = new Date(data.gy, data.gm - 1, data.gd);
             date.setHours(0, 0, 0, 0);
+            functions.logger.log(`Year ${yearToFetch} -> ${date.toISOString().split('T')[0]} (${date >= today ? 'FUTURE' : 'PAST'})`);
             if (date >= today) {
               return date;
             }
@@ -99,7 +128,7 @@ async function fetchNextHebrewBirthdays(
           return null;
         })
         .catch((error) => {
-          functions.logger.error(`Error fetching Hebrew year ${hebrewYear + i}:`, error);
+          functions.logger.error(`Error fetching Hebrew year ${yearToFetch}:`, error);
           return null;
         })
     );
@@ -170,10 +199,13 @@ export const onBirthdayWrite = functions.firestore
         throw new Error('No Hebrew date returned from Hebcal');
       }
 
-      functions.logger.log(`Fetching next birthdays for: year=${hebcalData.hy}, month=${hebcalData.hm}, day=${hebcalData.hd}`);
+      const currentHebrewYear = await getCurrentHebrewYear();
+      functions.logger.log(`Current Hebrew year: ${currentHebrewYear}`);
+      functions.logger.log(`Birth Hebrew date: year=${hebcalData.hy}, month=${hebcalData.hm}, day=${hebcalData.hd}`);
+      functions.logger.log(`Fetching next birthdays starting from year ${currentHebrewYear}`);
 
       const futureDates = await fetchNextHebrewBirthdays(
-        hebcalData.hy,
+        currentHebrewYear,
         hebcalData.hm,
         hebcalData.hd,
         10
