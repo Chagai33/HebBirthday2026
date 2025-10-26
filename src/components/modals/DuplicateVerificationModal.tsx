@@ -50,15 +50,15 @@ export const DuplicateVerificationModal: React.FC<DuplicateVerificationModalProp
             <div key={birthday.id} className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-gray-900">
-                  {birthday.firstName} {birthday.lastName}
+                  {birthday.first_name} {birthday.last_name}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {format(birthday.birthDateGregorian.toDate(), 'dd/MM/yyyy')}
+                  {format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy')}
                 </p>
               </div>
-              {birthday.birthDateHebrewString && (
+              {birthday.birth_date_hebrew_string && (
                 <span className="text-sm text-gray-600">
-                  {birthday.birthDateHebrewString}
+                  {birthday.birth_date_hebrew_string}
                 </span>
               )}
             </div>

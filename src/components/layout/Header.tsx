@@ -72,7 +72,7 @@ export const Header: React.FC = () => {
           <div className="hidden md:flex items-center gap-3">
             {user && (
               <span className="text-sm text-gray-600">
-                {user.displayName || user.email}
+                {user.display_name || user.email}
               </span>
             )}
 
@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
           <div className="md:hidden border-t border-gray-200 py-4 space-y-2">
             {user && (
               <div className="px-4 py-2 text-sm text-gray-600">
-                {user.displayName || user.email}
+                {user.display_name || user.email}
               </div>
             )}
 

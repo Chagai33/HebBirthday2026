@@ -37,10 +37,10 @@ export const BirthdayForm = ({
   } = useForm<BirthdayFormData>({
     defaultValues: editBirthday
       ? {
-          firstName: editBirthday.firstName,
-          lastName: editBirthday.lastName,
-          birthDateGregorian: editBirthday.birthDateGregorian.toDate(),
-          afterSunset: editBirthday.afterSunset,
+          firstName: editBirthday.first_name,
+          lastName: editBirthday.last_name,
+          birthDateGregorian: new Date(editBirthday.birth_date_gregorian),
+          afterSunset: editBirthday.after_sunset,
           gender: editBirthday.gender,
           notes: editBirthday.notes,
         }

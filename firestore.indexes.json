@@ -1,19 +1,29 @@
 {
   "indexes": [
     {
-      "collectionGroup": "birthdays",
+      "collectionGroup": "tenant_members",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "tenantId",
+          "fieldPath": "user_id",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "archived",
+          "fieldPath": "tenant_id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "tenant_members",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "tenant_id",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "birthDateGregorian",
+          "fieldPath": "user_id",
           "order": "ASCENDING"
         }
       ]
@@ -23,7 +33,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "tenantId",
+          "fieldPath": "tenant_id",
           "order": "ASCENDING"
         },
         {
@@ -31,7 +41,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "nextUpcomingHebrewBirthdayGregorian",
+          "fieldPath": "birth_date_gregorian",
           "order": "ASCENDING"
         }
       ]
@@ -41,25 +51,29 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "tenant_id",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "archived",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "nextUpcomingHebrewBirthdayGregorian",
+          "fieldPath": "next_upcoming_hebrew_birthday",
           "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "userTenantMemberships",
+      "collectionGroup": "birthdays",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "tenant_id",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "tenantId",
+          "fieldPath": "birth_date_gregorian",
           "order": "ASCENDING"
         }
       ]

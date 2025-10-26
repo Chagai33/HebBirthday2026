@@ -1,4 +1,18 @@
-import { supabase } from '../config/supabase';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { Birthday, BirthdayFormData } from '../types';
 
 export const birthdayService = {
@@ -7,58 +21,25 @@ export const birthdayService = {
     data: BirthdayFormData,
     userId: string
   ): Promise<string> {
-    const { data: birthday, error } = await supabase
-      .from('birthdays')
-      .insert({
-        tenant_id: tenantId,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        birth_date_gregorian: data.birthDateGregorian.toISOString().split('T')[0],
-        after_sunset: data.afterSunset ?? false,
-        gender: data.gender,
-        notes: data.notes || '',
-        archived: false,
-        created_by: userId,
-        updated_by: userId,
-      })
-      .select()
-      .single();
+    const birthdayRef = await addDoc(collection(db, 'birthdays'), {
+      tenant_id: tenantId,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      birth_date_gregorian: data.birthDateGregorian.toISOString().split('T')[0],
+      after_sunset: data.afterSunset ?? false,
+      gender: data.gender,
+      notes: data.notes || '',
+      archived: false,
+      created_by: userId,
+      updated_by: userId,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+      birth_date_hebrew_string: null,
+      next_upcoming_hebrew_birthday: null,
+      future_hebrew_birthdays: [],
+    });
 
-    if (error) throw error;
-
-    await this.calculateHebrewDates(birthday.id);
-
-    return birthday.id;
-  },
-
-  async calculateHebrewDates(birthdayId: string): Promise<void> {
-    try {
-      const { data: birthday } = await supabase
-        .from('birthdays')
-        .select('birth_date_gregorian, after_sunset')
-        .eq('id', birthdayId)
-        .single();
-
-      if (!birthday) return;
-
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-hebrew-dates`;
-      const headers = {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-      };
-
-      await fetch(apiUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          birthdayId,
-          birthDateGregorian: birthday.birth_date_gregorian,
-          afterSunset: birthday.after_sunset,
-        }),
-      });
-    } catch (error) {
-      console.error('Error calculating Hebrew dates:', error);
-    }
+    return birthdayRef.id;
   },
 
   async updateBirthday(
@@ -68,10 +49,8 @@ export const birthdayService = {
   ): Promise<void> {
     const updateData: any = {
       updated_by: userId,
-      updated_at: new Date().toISOString(),
+      updated_at: serverTimestamp(),
     };
-
-    let needsRecalculation = false;
 
     if (data.firstName !== undefined) updateData.first_name = data.firstName;
     if (data.lastName !== undefined) updateData.last_name = data.lastName;
@@ -79,75 +58,52 @@ export const birthdayService = {
       updateData.birth_date_gregorian = data.birthDateGregorian.toISOString().split('T')[0];
       updateData.birth_date_hebrew_string = null;
       updateData.next_upcoming_hebrew_birthday = null;
-      updateData.future_hebrew_birthdays = null;
-      needsRecalculation = true;
+      updateData.future_hebrew_birthdays = [];
     }
-    if (data.afterSunset !== undefined) {
-      updateData.after_sunset = data.afterSunset;
-      needsRecalculation = true;
-    }
+    if (data.afterSunset !== undefined) updateData.after_sunset = data.afterSunset;
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.notes !== undefined) updateData.notes = data.notes;
 
-    const { error } = await supabase
-      .from('birthdays')
-      .update(updateData)
-      .eq('id', birthdayId);
-
-    if (error) throw error;
-
-    if (needsRecalculation) {
-      await this.calculateHebrewDates(birthdayId);
-    }
+    await updateDoc(doc(db, 'birthdays', birthdayId), updateData);
   },
 
   async deleteBirthday(birthdayId: string): Promise<void> {
-    const { error } = await supabase.from('birthdays').delete().eq('id', birthdayId);
-
-    if (error) throw error;
+    await deleteDoc(doc(db, 'birthdays', birthdayId));
   },
 
   async archiveBirthday(birthdayId: string, userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('birthdays')
-      .update({
-        archived: true,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', birthdayId);
-
-    if (error) throw error;
+    await updateDoc(doc(db, 'birthdays', birthdayId), {
+      archived: true,
+      updated_by: userId,
+      updated_at: serverTimestamp(),
+    });
   },
 
   async getBirthday(birthdayId: string): Promise<Birthday | null> {
-    const { data, error } = await supabase
-      .from('birthdays')
-      .select('*')
-      .eq('id', birthdayId)
-      .maybeSingle();
+    const birthdayDoc = await getDoc(doc(db, 'birthdays', birthdayId));
+    if (!birthdayDoc.exists()) return null;
 
-    if (error) throw error;
-
-    return data;
+    return this.docToBirthday(birthdayDoc.id, birthdayDoc.data());
   },
 
   async getTenantBirthdays(tenantId: string, includeArchived = false): Promise<Birthday[]> {
-    let query = supabase
-      .from('birthdays')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .order('birth_date_gregorian', { ascending: true });
+    let q = query(
+      collection(db, 'birthdays'),
+      where('tenant_id', '==', tenantId),
+      orderBy('birth_date_gregorian', 'asc')
+    );
 
     if (!includeArchived) {
-      query = query.eq('archived', false);
+      q = query(
+        collection(db, 'birthdays'),
+        where('tenant_id', '==', tenantId),
+        where('archived', '==', false),
+        orderBy('birth_date_gregorian', 'asc')
+      );
     }
 
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return data || [];
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => this.docToBirthday(doc.id, doc.data()));
   },
 
   async getUpcomingBirthdays(tenantId: string, days: number = 30): Promise<Birthday[]> {
@@ -156,18 +112,17 @@ export const birthdayService = {
     futureDate.setDate(futureDate.getDate() + days);
     const futureDateStr = futureDate.toISOString().split('T')[0];
 
-    const { data, error } = await supabase
-      .from('birthdays')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .eq('archived', false)
-      .gte('next_upcoming_hebrew_birthday', now)
-      .lte('next_upcoming_hebrew_birthday', futureDateStr)
-      .order('next_upcoming_hebrew_birthday', { ascending: true });
+    const q = query(
+      collection(db, 'birthdays'),
+      where('tenant_id', '==', tenantId),
+      where('archived', '==', false),
+      where('next_upcoming_hebrew_birthday', '>=', now),
+      where('next_upcoming_hebrew_birthday', '<=', futureDateStr),
+      orderBy('next_upcoming_hebrew_birthday', 'asc')
+    );
 
-    if (error) throw error;
-
-    return data || [];
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => this.docToBirthday(doc.id, doc.data()));
   },
 
   async searchBirthdays(tenantId: string, searchTerm: string): Promise<Birthday[]> {
@@ -186,15 +141,41 @@ export const birthdayService = {
     firstName: string,
     lastName: string
   ): Promise<Birthday[]> {
-    const { data, error } = await supabase
-      .from('birthdays')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .ilike('first_name', firstName)
-      .ilike('last_name', lastName);
+    const allBirthdays = await this.getTenantBirthdays(tenantId);
 
-    if (error) throw error;
+    return allBirthdays.filter(
+      (birthday) =>
+        birthday.first_name.toLowerCase() === firstName.toLowerCase() &&
+        birthday.last_name.toLowerCase() === lastName.toLowerCase()
+    );
+  },
 
-    return data || [];
+  docToBirthday(id: string, data: any): Birthday {
+    return {
+      id,
+      tenant_id: data.tenant_id,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      birth_date_gregorian: data.birth_date_gregorian,
+      after_sunset: data.after_sunset ?? false,
+      gender: data.gender,
+      birth_date_hebrew_string: data.birth_date_hebrew_string,
+      next_upcoming_hebrew_birthday: data.next_upcoming_hebrew_birthday,
+      future_hebrew_birthdays: data.future_hebrew_birthdays || [],
+      notes: data.notes || '',
+      archived: data.archived ?? false,
+      created_at: this.timestampToString(data.created_at),
+      created_by: data.created_by,
+      updated_at: this.timestampToString(data.updated_at),
+      updated_by: data.updated_by,
+    };
+  },
+
+  timestampToString(timestamp: any): string {
+    if (!timestamp) return new Date().toISOString();
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toISOString();
+    }
+    return new Date().toISOString();
   },
 };

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { birthdayService } from '../services/birthday.service';
-import { Birthday, BirthdayFormData } from '../types';
+import { BirthdayFormData } from '../types';
 import { useTenant } from '../contexts/TenantContext';
 import { useAuth } from '../contexts/AuthContext';
 

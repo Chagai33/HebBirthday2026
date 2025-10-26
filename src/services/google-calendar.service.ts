@@ -95,14 +95,14 @@ export class GoogleCalendarService {
 
     const events = [];
 
-    if (birthday.nextUpcomingHebrewBirthdayGregorian) {
-      const nextBirthday = birthday.nextUpcomingHebrewBirthdayGregorian.toDate();
+    if (birthday.next_upcoming_hebrew_birthday) {
+      const nextBirthday = new Date(birthday.next_upcoming_hebrew_birthday);
       events.push(this.createEvent(birthday, nextBirthday, true));
     }
 
-    if (birthday.futureHebrewBirthdaysGregorian) {
-      for (const timestamp of birthday.futureHebrewBirthdaysGregorian.slice(0, 5)) {
-        const date = timestamp.toDate();
+    if (birthday.future_hebrew_birthdays) {
+      for (const dateStr of birthday.future_hebrew_birthdays.slice(0, 5)) {
+        const date = new Date(dateStr);
         events.push(this.createEvent(birthday, date, true));
       }
     }
@@ -121,15 +121,15 @@ export class GoogleCalendarService {
   private createEvent(birthday: Birthday, date: Date, isHebrew: boolean) {
     const dateStr = format(date, 'yyyy-MM-dd');
     const title = isHebrew
-      ? `🎂 ${birthday.firstName} ${birthday.lastName} - ${
-          birthday.birthDateHebrewString || ''
+      ? `🎂 ${birthday.first_name} ${birthday.last_name} - ${
+          birthday.birth_date_hebrew_string || ''
         }`
-      : `🎂 ${birthday.firstName} ${birthday.lastName}`;
+      : `🎂 ${birthday.first_name} ${birthday.last_name}`;
 
     return {
       summary: title,
-      description: `Birthday: ${birthday.firstName} ${birthday.lastName}\nHebrew Date: ${
-        birthday.birthDateHebrewString || 'N/A'
+      description: `Birthday: ${birthday.first_name} ${birthday.last_name}\nHebrew Date: ${
+        birthday.birth_date_hebrew_string || 'N/A'
       }\n${birthday.notes || ''}`,
       start: {
         date: dateStr,
