@@ -1,144 +1,84 @@
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signInWithPhoneNumber,
-  linkWithCredential,
-  EmailAuthProvider,
-  PhoneAuthProvider,
-  RecaptchaVerifier,
-  signOut as firebaseSignOut,
-  updateProfile as firebaseUpdateProfile,
-  User,
-} from 'firebase/auth';
-import { auth, db } from '../config/firebase';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { supabase } from '../config/supabase';
 import { AppUser } from '../types';
 
 export const authService = {
-  async createUserDocument(user: User, additionalData?: any): Promise<AppUser> {
-    const userRef = doc(db, 'users', user.uid);
-    const snapshot = await getDoc(userRef);
+  async signUp(email: string, password: string, displayName: string): Promise<void> {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+        },
+      },
+    });
 
-    if (!snapshot.exists()) {
-      const linkedProviders = user.providerData.map(p => p.providerId);
+    if (error) throw error;
 
-      const userData: Omit<AppUser, 'id'> = {
-        email: user.email || undefined,
-        phoneNumber: user.phoneNumber || undefined,
-        displayName: user.displayName || additionalData?.displayName || '',
-        photoURL: user.photoURL || undefined,
-        createdAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any,
-        tenants: [],
-        linkedProviders,
-        ...additionalData,
-      };
-
-      await setDoc(userRef, userData);
-
-      return {
-        id: user.uid,
-        ...userData,
-      } as AppUser;
-    }
-
-    const existingData = snapshot.data();
-    const linkedProviders = user.providerData.map(p => p.providerId);
-
-    if (JSON.stringify(existingData.linkedProviders) !== JSON.stringify(linkedProviders)) {
-      await updateDoc(userRef, {
-        linkedProviders,
-        updatedAt: serverTimestamp(),
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email: data.user.email,
+        display_name: displayName,
+        updated_at: new Date().toISOString(),
       });
     }
-
-    return {
-      id: snapshot.id,
-      ...existingData,
-    } as AppUser;
   },
 
-  async getUserDocument(userId: string): Promise<AppUser | null> {
-    const userRef = doc(db, 'users', userId);
-    const snapshot = await getDoc(userRef);
+  async signIn(email: string, password: string): Promise<void> {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (!snapshot.exists()) {
-      return null;
-    }
-
-    return {
-      id: snapshot.id,
-      ...snapshot.data(),
-    } as AppUser;
-  },
-
-  async signUp(email: string, password: string, displayName: string): Promise<User> {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-    await firebaseUpdateProfile(userCredential.user, { displayName });
-    await this.createUserDocument(userCredential.user, { displayName });
-
-    return userCredential.user;
-  },
-
-  async signIn(email: string, password: string): Promise<User> {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    await this.createUserDocument(userCredential.user);
-    return userCredential.user;
-  },
-
-  async signInWithGoogle(): Promise<User> {
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    await this.createUserDocument(userCredential.user);
-    return userCredential.user;
-  },
-
-  async signInWithPhone(phoneNumber: string, appVerifier: RecaptchaVerifier) {
-    return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-  },
-
-  async linkEmailPassword(email: string, password: string): Promise<void> {
-    if (!auth.currentUser) throw new Error('No user signed in');
-
-    const credential = EmailAuthProvider.credential(email, password);
-    await linkWithCredential(auth.currentUser, credential);
-    await this.createUserDocument(auth.currentUser);
-  },
-
-  async linkGoogleAccount(): Promise<void> {
-    if (!auth.currentUser) throw new Error('No user signed in');
-
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    await this.createUserDocument(auth.currentUser);
-  },
-
-  async linkPhoneNumber(phoneNumber: string, appVerifier: RecaptchaVerifier) {
-    if (!auth.currentUser) throw new Error('No user signed in');
-
-    const provider = new PhoneAuthProvider(auth);
-    return await provider.verifyPhoneNumber(phoneNumber, appVerifier);
+    if (error) throw error;
   },
 
   async signOut(): Promise<void> {
-    await firebaseSignOut(auth);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
 
-  async updateUserProfile(userId: string, data: Partial<AppUser>): Promise<void> {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
+  async getCurrentUser(): Promise<AppUser | null> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (auth.currentUser && (data.displayName || data.photoURL)) {
-      await firebaseUpdateProfile(auth.currentUser, {
-        displayName: data.displayName,
-        photoURL: data.photoURL,
-      });
-    }
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profile) return null;
+
+    return {
+      id: profile.id,
+      email: profile.email,
+      phone_number: profile.phone_number,
+      display_name: profile.display_name,
+      photo_url: profile.photo_url,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+    };
+  },
+
+  async updateProfile(userId: string, data: Partial<AppUser>): Promise<void> {
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (data.display_name !== undefined) updateData.display_name = data.display_name;
+    if (data.phone_number !== undefined) updateData.phone_number = data.phone_number;
+    if (data.photo_url !== undefined) updateData.photo_url = data.photo_url;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId);
+
+    if (error) throw error;
   },
 };

@@ -33,13 +33,13 @@ export const Dashboard = () => {
     return {
       totalBirthdays: birthdays.length,
       upcomingThisWeek: birthdays.filter((b) => {
-        if (!b.nextUpcomingHebrewBirthdayGregorian) return false;
-        const date = b.nextUpcomingHebrewBirthdayGregorian.toDate();
+        if (!b.next_upcoming_hebrew_birthday) return false;
+        const date = new Date(b.next_upcoming_hebrew_birthday);
         return isWithinInterval(date, { start: now, end: weekLater });
       }).length,
       upcomingThisMonth: birthdays.filter((b) => {
-        if (!b.nextUpcomingHebrewBirthdayGregorian) return false;
-        const date = b.nextUpcomingHebrewBirthdayGregorian.toDate();
+        if (!b.next_upcoming_hebrew_birthday) return false;
+        const date = new Date(b.next_upcoming_hebrew_birthday);
         return isWithinInterval(date, { start: now, end: monthLater });
       }).length,
       maleCount: birthdays.filter((b) => b.gender === 'male').length,

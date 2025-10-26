@@ -34,28 +34,28 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
       const search = searchTerm.toLowerCase();
       filtered = birthdays.filter(
         (b) =>
-          b.firstName.toLowerCase().includes(search) ||
-          b.lastName.toLowerCase().includes(search)
+          b.first_name.toLowerCase().includes(search) ||
+          b.last_name.toLowerCase().includes(search)
       );
     }
 
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return `${a.firstName} ${a.lastName}`.localeCompare(
-            `${b.firstName} ${b.lastName}`
+          return `${a.first_name} ${a.last_name}`.localeCompare(
+            `${b.first_name} ${b.last_name}`
           );
         case 'date':
-          return a.birthDateGregorian.toMillis() - b.birthDateGregorian.toMillis();
+          return new Date(a.birth_date_gregorian).getTime() - new Date(b.birth_date_gregorian).getTime();
         case 'upcoming':
-          if (!a.nextUpcomingHebrewBirthdayGregorian && !b.nextUpcomingHebrewBirthdayGregorian) {
+          if (!a.next_upcoming_hebrew_birthday && !b.next_upcoming_hebrew_birthday) {
             return 0;
           }
-          if (!a.nextUpcomingHebrewBirthdayGregorian) return 1;
-          if (!b.nextUpcomingHebrewBirthdayGregorian) return -1;
+          if (!a.next_upcoming_hebrew_birthday) return 1;
+          if (!b.next_upcoming_hebrew_birthday) return -1;
           return (
-            a.nextUpcomingHebrewBirthdayGregorian.toMillis() -
-            b.nextUpcomingHebrewBirthdayGregorian.toMillis()
+            new Date(a.next_upcoming_hebrew_birthday).getTime() -
+            new Date(b.next_upcoming_hebrew_birthday).getTime()
           );
         default:
           return 0;
@@ -196,23 +196,23 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       />
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {birthday.firstName}
+                      {birthday.first_name}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {birthday.lastName}
+                      {birthday.last_name}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {format(birthday.birthDateGregorian.toDate(), 'dd/MM/yyyy', {
+                      {format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy', {
                         locale,
                       })}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {birthday.birthDateHebrewString || '-'}
+                      {birthday.birth_date_hebrew_string || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {birthday.nextUpcomingHebrewBirthdayGregorian
+                      {birthday.next_upcoming_hebrew_birthday
                         ? format(
-                            birthday.nextUpcomingHebrewBirthdayGregorian.toDate(),
+                            new Date(birthday.next_upcoming_hebrew_birthday),
                             'dd/MM/yyyy',
                             { locale }
                           )

@@ -1,5 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
 export type Gender = 'male' | 'female' | 'other';
 
 export type UserRole = 'owner' | 'admin' | 'member';
@@ -7,51 +5,48 @@ export type UserRole = 'owner' | 'admin' | 'member';
 export interface Tenant {
   id: string;
   name: string;
-  ownerId: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  settings?: {
-    defaultLanguage?: 'he' | 'en';
-    timezone?: string;
-  };
+  owner_id: string;
+  default_language?: 'he' | 'en';
+  timezone?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserTenantMembership {
-  userId: string;
-  tenantId: string;
+  id: string;
+  user_id: string;
+  tenant_id: string;
   role: UserRole;
-  joinedAt: Timestamp;
+  joined_at: string;
 }
 
 export interface AppUser {
   id: string;
   email?: string;
-  phoneNumber?: string;
-  displayName?: string;
-  photoURL?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  tenants: string[];
-  linkedProviders: string[];
+  phone_number?: string;
+  display_name?: string;
+  photo_url?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Birthday {
   id: string;
-  tenantId: string;
-  firstName: string;
-  lastName: string;
-  birthDateGregorian: Timestamp;
-  afterSunset?: boolean;
+  tenant_id: string;
+  first_name: string;
+  last_name: string;
+  birth_date_gregorian: string;
+  after_sunset?: boolean;
   gender?: Gender;
-  birthDateHebrewString?: string;
-  nextUpcomingHebrewBirthdayGregorian?: Timestamp;
-  futureHebrewBirthdaysGregorian?: Timestamp[];
+  birth_date_hebrew_string?: string;
+  next_upcoming_hebrew_birthday?: string;
+  future_hebrew_birthdays?: string[];
   notes?: string;
   archived: boolean;
-  createdAt: Timestamp;
-  createdBy: string;
-  updatedAt: Timestamp;
-  updatedBy: string;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string;
 }
 
 export interface BirthdayFormData {
@@ -79,16 +74,9 @@ export interface VerificationModalProps {
 
 export interface AuthContextType {
   user: AppUser | null;
-  firebaseUser: any;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithPhone: (phoneNumber: string, appVerifier: any) => Promise<any>;
-  confirmPhoneSignIn: (verificationId: string, code: string) => Promise<void>;
-  linkEmailPassword: (email: string, password: string) => Promise<void>;
-  linkGoogleAccount: () => Promise<void>;
-  linkPhoneNumber: (phoneNumber: string, appVerifier: any) => Promise<any>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<AppUser>) => Promise<void>;
 }
