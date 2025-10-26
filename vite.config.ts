@@ -7,4 +7,12 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  resolve: {
+    preserveSymlinks: false,
+  },
+  server: {
+    fs: {
+      strict: false,
+    },
+  },
 });
