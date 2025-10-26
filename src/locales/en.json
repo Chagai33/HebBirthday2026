@@ -1,0 +1,112 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "yes": "Yes",
+    "no": "No",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "displayName": "Display Name",
+    "phoneNumber": "Phone Number",
+    "verificationCode": "Verification Code",
+    "signInWithGoogle": "Sign in with Google",
+    "signInWithPhone": "Sign in with Phone",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "linkAccount": "Link Account",
+    "linkedProviders": "Linked Providers"
+  },
+  "tenant": {
+    "switchTenant": "Switch Tenant",
+    "createTenant": "Create Tenant",
+    "tenantName": "Tenant Name",
+    "myTenants": "My Tenants",
+    "inviteUser": "Invite User",
+    "role": "Role",
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "birthday": {
+    "birthdays": "Birthdays",
+    "addBirthday": "Add Birthday",
+    "editBirthday": "Edit Birthday",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "birthDate": "Birth Date",
+    "afterSunset": "After Sunset",
+    "gender": "Gender",
+    "hebrewDate": "Hebrew Date",
+    "nextHebrewBirthday": "Next Hebrew Birthday",
+    "notes": "Notes",
+    "archived": "Archived",
+    "upcomingBirthdays": "Upcoming Birthdays",
+    "addToCalendar": "Add to Calendar",
+    "addToGoogleCalendar": "Add to Google Calendar",
+    "exportSelected": "Export Selected"
+  },
+  "dashboard": {
+    "dashboard": "Dashboard",
+    "statistics": "Statistics",
+    "totalBirthdays": "Total Birthdays",
+    "upcomingThisMonth": "Upcoming This Month",
+    "upcomingThisWeek": "Upcoming This Week",
+    "maleCount": "Male",
+    "femaleCount": "Female"
+  },
+  "modals": {
+    "duplicateVerification": {
+      "title": "Possible Duplicate",
+      "message": "A person with similar name already exists. Do you want to continue?",
+      "existingPerson": "Existing person"
+    },
+    "sunsetVerification": {
+      "title": "Birth Time Verification",
+      "message": "Was the person born after sunset?",
+      "explanation": "This affects the Hebrew date calculation."
+    },
+    "genderVerification": {
+      "title": "Gender Selection",
+      "message": "Please select gender for accurate Hebrew date tracking."
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDontMatch": "Passwords don't match",
+    "invalidPhoneNumber": "Invalid phone number"
+  },
+  "messages": {
+    "birthdayAdded": "Birthday added successfully",
+    "birthdayUpdated": "Birthday updated successfully",
+    "birthdayDeleted": "Birthday deleted successfully",
+    "tenantCreated": "Tenant created successfully",
+    "tenantUpdated": "Tenant updated successfully",
+    "userInvited": "User invited successfully",
+    "accountLinked": "Account linked successfully",
+    "signInSuccess": "Signed in successfully",
+    "signOutSuccess": "Signed out successfully"
+  }
+}

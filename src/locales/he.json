@@ -1,0 +1,112 @@
+{
+  "common": {
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "add": "הוסף",
+    "search": "חיפוש",
+    "filter": "סינון",
+    "close": "סגור",
+    "confirm": "אשר",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "yes": "כן",
+    "no": "לא",
+    "male": "זכר",
+    "female": "נקבה",
+    "other": "אחר"
+  },
+  "auth": {
+    "signIn": "התחבר",
+    "signUp": "הרשם",
+    "signOut": "התנתק",
+    "email": "דואר אלקטרוני",
+    "password": "סיסמה",
+    "confirmPassword": "אימות סיסמה",
+    "displayName": "שם תצוגה",
+    "phoneNumber": "מספר טלפון",
+    "verificationCode": "קוד אימות",
+    "signInWithGoogle": "התחבר עם Google",
+    "signInWithPhone": "התחבר עם טלפון",
+    "alreadyHaveAccount": "כבר יש לך חשבון?",
+    "dontHaveAccount": "אין לך חשבון?",
+    "forgotPassword": "שכחת סיסמה?",
+    "resetPassword": "איפוס סיסמה",
+    "linkAccount": "קישור חשבון",
+    "linkedProviders": "חשבונות מקושרים"
+  },
+  "tenant": {
+    "switchTenant": "החלף קבוצה",
+    "createTenant": "צור קבוצה",
+    "tenantName": "שם הקבוצה",
+    "myTenants": "הקבוצות שלי",
+    "inviteUser": "הזמן משתמש",
+    "role": "תפקיד",
+    "owner": "בעלים",
+    "admin": "מנהל",
+    "member": "חבר"
+  },
+  "birthday": {
+    "birthdays": "ימי הולדת",
+    "addBirthday": "הוסף יום הולדת",
+    "editBirthday": "ערוך יום הולדת",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "birthDate": "תאריך לידה",
+    "afterSunset": "אחרי השקיעה",
+    "gender": "מגדר",
+    "hebrewDate": "תאריך עברי",
+    "nextHebrewBirthday": "יום הולדת עברי הבא",
+    "notes": "הערות",
+    "archived": "בארכיון",
+    "upcomingBirthdays": "ימי הולדת קרובים",
+    "addToCalendar": "הוסף ליומן",
+    "addToGoogleCalendar": "הוסף ליומן Google",
+    "exportSelected": "ייצא נבחרים"
+  },
+  "dashboard": {
+    "dashboard": "לוח בקרה",
+    "statistics": "סטטיסטיקות",
+    "totalBirthdays": "סה״כ ימי הולדת",
+    "upcomingThisMonth": "קרובים החודש",
+    "upcomingThisWeek": "קרובים השבוע",
+    "maleCount": "זכרים",
+    "femaleCount": "נקבות"
+  },
+  "modals": {
+    "duplicateVerification": {
+      "title": "כפילות אפשרית",
+      "message": "אדם עם שם דומה כבר קיים. האם להמשיך?",
+      "existingPerson": "אדם קיים"
+    },
+    "sunsetVerification": {
+      "title": "אימות זמן לידה",
+      "message": "האם האדם נולד אחרי השקיעה?",
+      "explanation": "זה משפיע על חישוב התאריך העברי."
+    },
+    "genderVerification": {
+      "title": "בחירת מגדר",
+      "message": "נא לבחור מגדר לצורך מעקב מדויק אחר תאריך עברי."
+    }
+  },
+  "validation": {
+    "required": "שדה זה הוא חובה",
+    "invalidEmail": "כתובת דואר אלקטרוני לא תקינה",
+    "passwordTooShort": "הסיסמה חייבת להכיל לפחות 6 תווים",
+    "passwordsDontMatch": "הסיסמאות אינן תואמות",
+    "invalidPhoneNumber": "מספר טלפון לא תקין"
+  },
+  "messages": {
+    "birthdayAdded": "יום הולדת נוסף בהצלחה",
+    "birthdayUpdated": "יום הולדת עודכן בהצלחה",
+    "birthdayDeleted": "יום הולדת נמחק בהצלחה",
+    "tenantCreated": "קבוצה נוצרה בהצלחה",
+    "tenantUpdated": "קבוצה עודכנה בהצלחה",
+    "userInvited": "משתמש הוזמן בהצלחה",
+    "accountLinked": "חשבון קושר בהצלחה",
+    "signInSuccess": "התחברת בהצלחה",
+    "signOutSuccess": "התנתקת בהצלחה"
+  }
+}
