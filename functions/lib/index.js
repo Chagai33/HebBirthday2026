@@ -75,31 +75,43 @@ async function fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, year
     const futureDates = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    functions.logger.log(`Fetching future dates for Hebrew: ${hebrewYear}/${hebrewMonth}/${hebrewDay}`);
+    const fetchPromises = [];
     for (let i = 0; i <= yearsAhead; i++) {
-        try {
-            const params = new URLSearchParams({
-                cfg: 'json',
-                hy: (hebrewYear + i).toString(),
-                hm: hebrewMonth,
-                hd: hebrewDay.toString(),
-                h2g: '1',
-            });
-            const response = await (0, node_fetch_1.default)(`https://www.hebcal.com/converter?${params.toString()}`);
-            if (!response.ok)
-                continue;
-            const data = await response.json();
-            if (data.gy && data.gm && data.gd) {
+        const params = new URLSearchParams({
+            cfg: 'json',
+            hy: (hebrewYear + i).toString(),
+            hm: hebrewMonth,
+            hd: hebrewDay.toString(),
+            h2g: '1',
+        });
+        const url = `https://www.hebcal.com/converter?${params.toString()}`;
+        fetchPromises.push((0, node_fetch_1.default)(url)
+            .then((response) => {
+            if (!response.ok) {
+                functions.logger.warn(`Response not OK for year ${hebrewYear + i}: ${response.status}`);
+                return null;
+            }
+            return response.json();
+        })
+            .then((data) => {
+            if (data && data.gy && data.gm && data.gd) {
                 const date = new Date(data.gy, data.gm - 1, data.gd);
                 date.setHours(0, 0, 0, 0);
                 if (date >= today) {
-                    futureDates.push(date);
+                    return date;
                 }
             }
-        }
-        catch (error) {
-            functions.logger.warn(`Error fetching Hebrew year ${hebrewYear + i}:`, error);
-        }
+            return null;
+        })
+            .catch((error) => {
+            functions.logger.error(`Error fetching Hebrew year ${hebrewYear + i}:`, error);
+            return null;
+        }));
     }
+    const results = await Promise.all(fetchPromises);
+    futureDates.push(...results.filter((date) => date !== null));
+    functions.logger.log(`Total future dates found: ${futureDates.length}`);
     return futureDates.sort((a, b) => a.getTime() - b.getTime());
 }
 exports.onBirthdayWrite = functions.firestore
