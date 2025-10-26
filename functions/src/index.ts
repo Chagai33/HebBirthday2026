@@ -23,7 +23,6 @@ async function fetchHebcalData(
   const year = gregorianDate.getFullYear();
   const month = String(gregorianDate.getMonth() + 1).padStart(2, '0');
   const day = String(gregorianDate.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
 
   const params = new URLSearchParams({
     cfg: 'json',
@@ -64,7 +63,6 @@ async function fetchNextHebrewBirthdays(
     h2g: '1',
   });
 
-  const url = `https://www.hebcal.com/converter?${params.toString()}`;
   const currentYear = new Date().getFullYear();
   const futureDates: Date[] = [];
 
