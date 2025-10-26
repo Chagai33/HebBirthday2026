@@ -27,7 +27,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (firebaseUser) {
         try {
           const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
+          if (currentUser) {
+            setUser(currentUser);
+          } else {
+            console.warn('User profile not found, signing out');
+            await authService.signOut();
+            setUser(null);
+          }
         } catch (error) {
           console.error('Error loading user data:', error);
           setUser(null);
