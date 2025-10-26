@@ -4,7 +4,8 @@ import { Birthday } from '../../types';
 import { format } from 'date-fns';
 import { he, enUS } from 'date-fns/locale';
 import { useDeleteBirthday, useArchiveBirthday } from '../../hooks/useBirthdays';
-import { Edit, Trash2, Archive, Calendar, Search } from 'lucide-react';
+import { Edit, Trash2, Archive, Calendar, Search, CalendarDays } from 'lucide-react';
+import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 
 interface BirthdayListProps {
   birthdays: Birthday[];
@@ -24,6 +25,8 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showFutureModal, setShowFutureModal] = useState(false);
+  const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
 
   const locale = i18n.language === 'he' ? he : enUS;
 
@@ -210,13 +213,24 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       {birthday.birth_date_hebrew_string || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {birthday.next_upcoming_hebrew_birthday
-                        ? format(
+                      {birthday.next_upcoming_hebrew_birthday ? (
+                        <button
+                          onClick={() => {
+                            setSelectedBirthday(birthday);
+                            setShowFutureModal(true);
+                          }}
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                        >
+                          <CalendarDays className="w-4 h-4" />
+                          {format(
                             new Date(birthday.next_upcoming_hebrew_birthday),
                             'dd/MM/yyyy',
                             { locale }
-                          )
-                        : '-'}
+                          )}
+                        </button>
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
@@ -259,6 +273,13 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           </table>
         </div>
       </div>
+
+      <FutureBirthdaysModal
+        isOpen={showFutureModal}
+        onClose={() => setShowFutureModal(false)}
+        name={selectedBirthday ? `${selectedBirthday.first_name} ${selectedBirthday.last_name}` : ''}
+        futureDates={selectedBirthday?.future_hebrew_birthdays || []}
+      />
     </div>
   );
 };

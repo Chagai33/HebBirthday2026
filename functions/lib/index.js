@@ -71,31 +71,33 @@ async function fetchHebcalData(gregorianDate, afterSunset) {
         throw error;
     }
 }
-async function fetchNextHebrewBirthdays(hebrewDate, yearsAhead = 10) {
-    const params = new URLSearchParams({
-        cfg: 'json',
-        hd: hebrewDate,
-        h2g: '1',
-    });
-    const currentYear = new Date().getFullYear();
+async function fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, yearsAhead = 10) {
     const futureDates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     for (let i = 0; i <= yearsAhead; i++) {
         try {
-            const yearParams = new URLSearchParams(params);
-            yearParams.set('gy', (currentYear + i).toString());
-            const response = await (0, node_fetch_1.default)(`https://www.hebcal.com/converter?${yearParams.toString()}`);
+            const params = new URLSearchParams({
+                cfg: 'json',
+                hy: (hebrewYear + i).toString(),
+                hm: hebrewMonth,
+                hd: hebrewDay.toString(),
+                h2g: '1',
+            });
+            const response = await (0, node_fetch_1.default)(`https://www.hebcal.com/converter?${params.toString()}`);
             if (!response.ok)
                 continue;
             const data = await response.json();
             if (data.gy && data.gm && data.gd) {
                 const date = new Date(data.gy, data.gm - 1, data.gd);
-                if (date >= new Date()) {
+                date.setHours(0, 0, 0, 0);
+                if (date >= today) {
                     futureDates.push(date);
                 }
             }
         }
         catch (error) {
-            functions.logger.warn(`Error fetching year ${currentYear + i}:`, error);
+            functions.logger.warn(`Error fetching Hebrew year ${hebrewYear + i}:`, error);
         }
     }
     return futureDates.sort((a, b) => a.getTime() - b.getTime());
@@ -121,9 +123,12 @@ exports.onBirthdayWrite = functions.firestore
         if (!hebcalData.hebrew) {
             throw new Error('No Hebrew date returned from Hebcal');
         }
-        const futureDates = await fetchNextHebrewBirthdays(hebcalData.hebrew, 10);
+        const futureDates = await fetchNextHebrewBirthdays(hebcalData.hy, hebcalData.hm, hebcalData.hd, 10);
         const updateData = {
             birth_date_hebrew_string: hebcalData.hebrew,
+            birth_date_hebrew_year: hebcalData.hy,
+            birth_date_hebrew_month: hebcalData.hm,
+            birth_date_hebrew_day: hebcalData.hd,
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
         };
         if (futureDates.length > 0) {
@@ -168,9 +173,11 @@ exports.updateNextBirthdayScheduled = functions.pubsub
                 }
                 else {
                     try {
-                        const hebrewDate = data.birth_date_hebrew_string;
-                        if (hebrewDate) {
-                            const newFutureDates = await fetchNextHebrewBirthdays(hebrewDate, 10);
+                        const hebrewYear = data.birth_date_hebrew_year;
+                        const hebrewMonth = data.birth_date_hebrew_month;
+                        const hebrewDay = data.birth_date_hebrew_day;
+                        if (hebrewYear && hebrewMonth && hebrewDay) {
+                            const newFutureDates = await fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, 10);
                             if (newFutureDates.length > 0) {
                                 const nextDate = newFutureDates[0];
                                 batch.update(doc.ref, {
