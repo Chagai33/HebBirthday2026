@@ -188,6 +188,15 @@ export const onBirthdayWrite = functions.firestore
         updateData.future_hebrew_birthdays = futureDates.map((date) =>
           `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
         );
+      } else {
+        functions.logger.warn('No future dates found, setting empty array');
+        updateData.future_hebrew_birthdays = [];
+      }
+
+      const docSnapshot = await change.after.ref.get();
+      if (!docSnapshot.exists) {
+        functions.logger.warn('Document was deleted during processing, skipping update');
+        return null;
       }
 
       await change.after.ref.update(updateData);
@@ -195,7 +204,11 @@ export const onBirthdayWrite = functions.firestore
       functions.logger.log(`Successfully calculated Hebrew dates for birthday ${context.params.birthdayId}`);
 
       return null;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === 5 || error.message?.includes('No document to update')) {
+        functions.logger.warn('Document no longer exists, skipping update');
+        return null;
+      }
       functions.logger.error('Error calculating Hebrew dates:', error);
       throw error;
     }

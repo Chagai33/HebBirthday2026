@@ -117,6 +117,7 @@ async function fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, year
 exports.onBirthdayWrite = functions.firestore
     .document('birthdays/{birthdayId}')
     .onWrite(async (change, context) => {
+    var _a;
     const beforeData = change.before.exists ? change.before.data() : null;
     const afterData = change.after.exists ? change.after.data() : null;
     if (!afterData) {
@@ -170,11 +171,24 @@ exports.onBirthdayWrite = functions.firestore
             updateData.next_upcoming_hebrew_birthday = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
             updateData.future_hebrew_birthdays = futureDates.map((date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`);
         }
+        else {
+            functions.logger.warn('No future dates found, setting empty array');
+            updateData.future_hebrew_birthdays = [];
+        }
+        const docSnapshot = await change.after.ref.get();
+        if (!docSnapshot.exists) {
+            functions.logger.warn('Document was deleted during processing, skipping update');
+            return null;
+        }
         await change.after.ref.update(updateData);
         functions.logger.log(`Successfully calculated Hebrew dates for birthday ${context.params.birthdayId}`);
         return null;
     }
     catch (error) {
+        if (error.code === 5 || ((_a = error.message) === null || _a === void 0 ? void 0 : _a.includes('No document to update'))) {
+            functions.logger.warn('Document no longer exists, skipping update');
+            return null;
+        }
         functions.logger.error('Error calculating Hebrew dates:', error);
         throw error;
     }
