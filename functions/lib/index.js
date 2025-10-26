@@ -111,8 +111,13 @@ exports.onBirthdayWrite = functions.firestore
     }
     if (afterData.birth_date_hebrew_string &&
         afterData.next_upcoming_hebrew_birthday &&
-        afterData.future_hebrew_birthdays) {
+        afterData.future_hebrew_birthdays &&
+        afterData.future_hebrew_birthdays.length > 0) {
         functions.logger.log('Birthday already has Hebrew data, skipping calculation');
+        return null;
+    }
+    if (!afterData.birth_date_gregorian) {
+        functions.logger.warn('No birth_date_gregorian found, skipping');
         return null;
     }
     try {
