@@ -12,11 +12,14 @@ import { googleCalendarService } from '../services/google-calendar.service';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
-  const { currentTenant } = useTenant();
+  const { currentTenant, createTenant } = useTenant();
   const { data: birthdays = [], isLoading } = useBirthdays();
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
+  const [showCreateTenant, setShowCreateTenant] = useState(false);
+  const [tenantName, setTenantName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     googleCalendarService.initialize().catch(console.error);
@@ -64,6 +67,22 @@ export const Dashboard = () => {
     }
   };
 
+  const handleCreateTenant = async () => {
+    if (!tenantName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      await createTenant(tenantName);
+      setShowCreateTenant(false);
+      setTenantName('');
+    } catch (error) {
+      console.error('Error creating tenant:', error);
+      alert(t('messages.error', 'An error occurred. Please try again.'));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   if (!currentTenant) {
     return (
       <Layout>
@@ -75,7 +94,58 @@ export const Dashboard = () => {
           <p className="text-gray-600 mb-6">
             {t('common.noTenantMessage', 'Create a tenant to get started')}
           </p>
+          <button
+            onClick={() => setShowCreateTenant(true)}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            {t('tenant.createNewTenant', 'Create Group')}
+          </button>
         </div>
+
+        {showCreateTenant && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                {t('tenant.createNewTenant', 'Create New Group')}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('tenant.tenantName', 'Group Name')}
+                  </label>
+                  <input
+                    type="text"
+                    value={tenantName}
+                    onChange={(e) => setTenantName(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={t('tenant.enterTenantName', 'Enter group name')}
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowCreateTenant(false);
+                      setTenantName('');
+                    }}
+                    disabled={isCreating}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </button>
+                  <button
+                    onClick={handleCreateTenant}
+                    disabled={isCreating || !tenantName.trim()}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCreating ? t('common.creating', 'Creating...') : t('common.create', 'Create')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Layout>
     );
   }
