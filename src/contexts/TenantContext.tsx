@@ -33,7 +33,18 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
       }
 
       try {
-        const tenants = await tenantService.getUserTenants(user.id);
+        let tenants = await tenantService.getUserTenants(user.id);
+
+        if (tenants.length === 0) {
+          const displayName = user.display_name || user.email?.split('@')[0] || 'User';
+          const defaultTenantName = `${displayName}'s Workspace`;
+          const tenantId = await tenantService.createTenant(defaultTenantName, user.id);
+          const newTenant = await tenantService.getTenant(tenantId);
+          if (newTenant) {
+            tenants = [newTenant];
+          }
+        }
+
         setUserTenants(tenants);
 
         const savedTenantId = localStorage.getItem('currentTenantId');
