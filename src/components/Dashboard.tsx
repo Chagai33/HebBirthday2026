@@ -34,10 +34,6 @@ export const Dashboard = () => {
   }, [allBirthdays, selectedGroupIds]);
 
   useEffect(() => {
-    googleCalendarService.initialize().catch(console.error);
-  }, []);
-
-  useEffect(() => {
     if (currentTenant && user && !isLoadingGroups && rootGroups.length === 0) {
       console.log('Initializing root groups for tenant:', currentTenant.id);
       initializeRootGroups.mutate(currentTenant.default_language || 'he');
