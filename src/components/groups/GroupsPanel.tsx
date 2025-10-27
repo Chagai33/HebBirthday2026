@@ -28,6 +28,8 @@ export const GroupsPanel = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [deletingGroup, setDeletingGroup] = useState<{ id: string; name: string } | null>(null);
+  const [deleteRecordCount, setDeleteRecordCount] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     color: GROUP_COLORS[0],
