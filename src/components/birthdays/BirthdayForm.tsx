@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { BirthdayFormData, Gender, Birthday } from '../../types';
 import { useCreateBirthday, useUpdateBirthday, useCheckDuplicates } from '../../hooks/useBirthdays';
-import { useGroups } from '../../hooks/useGroups';
+import { useGroups, useCreateGroup } from '../../hooks/useGroups';
+import { useTenant } from '../../contexts/TenantContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { DuplicateVerificationModal } from '../modals/DuplicateVerificationModal';
 import { SunsetVerificationModal } from '../modals/SunsetVerificationModal';
 import { GenderVerificationModal } from '../modals/GenderVerificationModal';
-import { X, Save } from 'lucide-react';
+import { X, Save, Plus } from 'lucide-react';
 import { Toast } from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
 
@@ -25,15 +27,21 @@ export const BirthdayForm = ({
   defaultGroupId,
 }: BirthdayFormProps) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { currentTenant } = useTenant();
   const createBirthday = useCreateBirthday();
   const updateBirthday = useUpdateBirthday();
   const checkDuplicates = useCheckDuplicates();
   const { data: allGroups = [], refetch: refetchGroups } = useGroups();
+  const createGroup = useCreateGroup();
   const { toasts, hideToast, success: showSuccess, error: showError } = useToast();
 
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showSunsetModal, setShowSunsetModal] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedParentGroup, setSelectedParentGroup] = useState('');
   const [duplicates, setDuplicates] = useState<Birthday[]>([]);
   const [pendingData, setPendingData] = useState<BirthdayFormData | null>(null);
 
@@ -151,6 +159,33 @@ export const BirthdayForm = ({
     }
   };
 
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim() || !selectedParentGroup || !user || !currentTenant) {
+      showError(t('validation.required'));
+      return;
+    }
+
+    try {
+      const parentGroup = rootGroups.find(g => g.id === selectedParentGroup);
+      if (!parentGroup) return;
+
+      const groupId = await createGroup.mutateAsync({
+        name: newGroupName,
+        parentId: selectedParentGroup,
+        color: parentGroup.color,
+      });
+
+      await refetchGroups();
+      setShowCreateGroupModal(false);
+      setNewGroupName('');
+      setSelectedParentGroup('');
+      showSuccess(t('messages.groupCreated', 'Group created successfully'));
+    } catch (error) {
+      console.error('Error creating group:', error);
+      showError(t('common.error'));
+    }
+  };
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
@@ -223,24 +258,34 @@ export const BirthdayForm = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('birthday.group')} *
               </label>
-              <select
-                {...register('groupId', { required: t('validation.required') })}
-                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">{t('birthday.selectGroup')}</option>
-                {rootGroups.map((root) => {
-                  const children = childGroups.filter(c => c.parent_id === root.id);
-                  return (
-                    <optgroup key={root.id} label={root.name}>
-                      {children.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  );
-                })}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  {...register('groupId', { required: t('validation.required') })}
+                  className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">{t('birthday.selectGroup')}</option>
+                  {rootGroups.map((root) => {
+                    const children = childGroups.filter(c => c.parent_id === root.id);
+                    return (
+                      <optgroup key={root.id} label={root.name}>
+                        {children.map((group) => (
+                          <option key={group.id} value={group.id}>
+                            {group.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateGroupModal(true)}
+                  className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+                  title={t('group.createSubgroup', 'Create subgroup')}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
               {errors.groupId && (
                 <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.groupId.message}</p>
               )}
@@ -328,6 +373,69 @@ export const BirthdayForm = ({
         onClose={() => setShowGenderModal(false)}
         onConfirm={handleGenderConfirm}
       />
+
+      {showCreateGroupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              {t('group.createSubgroup', 'Create Subgroup')}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('group.parentGroup', 'Parent Group')} *
+                </label>
+                <select
+                  value={selectedParentGroup}
+                  onChange={(e) => setSelectedParentGroup(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">{t('common.select', 'Select')}</option>
+                  {rootGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('group.subgroupName', 'Subgroup Name')} *
+                </label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={t('group.enterSubgroupName', 'Enter subgroup name')}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateGroupModal(false);
+                    setNewGroupName('');
+                    setSelectedParentGroup('');
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                >
+                  {t('common.cancel', 'Cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateGroup}
+                  disabled={!newGroupName.trim() || !selectedParentGroup || createGroup.isPending}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {createGroup.isPending ? t('common.creating', 'Creating...') : t('common.create', 'Create')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toasts.map((toast) => (
         <Toast
