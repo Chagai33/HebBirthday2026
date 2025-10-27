@@ -230,7 +230,6 @@ export const BirthdayForm = ({
                 <option value="">{t('birthday.selectGroup')}</option>
                 {rootGroups.map((root) => {
                   const children = childGroups.filter(c => c.parent_id === root.id);
-                  if (children.length === 0) return null;
                   return (
                     <optgroup key={root.id} label={root.name}>
                       {children.map((group) => (
