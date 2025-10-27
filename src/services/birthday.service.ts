@@ -73,14 +73,6 @@ export const birthdayService = {
     await deleteDoc(doc(db, 'birthdays', birthdayId));
   },
 
-  async archiveBirthday(birthdayId: string, userId: string): Promise<void> {
-    await updateDoc(doc(db, 'birthdays', birthdayId), {
-      archived: true,
-      updated_by: userId,
-      updated_at: serverTimestamp(),
-    });
-  },
-
   async getBirthday(birthdayId: string): Promise<Birthday | null> {
     const birthdayDoc = await getDoc(doc(db, 'birthdays', birthdayId));
     if (!birthdayDoc.exists()) return null;

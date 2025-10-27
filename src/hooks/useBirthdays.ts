@@ -96,22 +96,6 @@ export const useDeleteBirthday = () => {
   });
 };
 
-export const useArchiveBirthday = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  return useMutation({
-    mutationFn: async (birthdayId: string) => {
-      if (!user) throw new Error('No user');
-      return await birthdayService.archiveBirthday(birthdayId, user.id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['birthdays'] });
-      queryClient.invalidateQueries({ queryKey: ['upcomingBirthdays'] });
-    },
-  });
-};
-
 export const useCheckDuplicates = () => {
   return useMutation({
     mutationFn: async ({

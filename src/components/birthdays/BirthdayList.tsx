@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Birthday } from '../../types';
 import { format } from 'date-fns';
 import { he, enUS } from 'date-fns/locale';
-import { useDeleteBirthday, useArchiveBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
+import { useDeleteBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
 import { useGroups } from '../../hooks/useGroups';
 import { useGroupFilter } from '../../contexts/GroupFilterContext';
-import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
+import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 import { WishlistModal } from '../modals/WishlistModal';
 
@@ -23,7 +23,6 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const deleteBirthday = useDeleteBirthday();
-  const archiveBirthday = useArchiveBirthday();
   const refreshHebrewData = useRefreshHebrewData();
   const { data: groups = [] } = useGroups();
   const { selectedGroupIds, toggleGroupFilter, clearGroupFilters } = useGroupFilter();
@@ -86,10 +85,6 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
     if (window.confirm(t('common.confirmDelete', 'Are you sure?'))) {
       await deleteBirthday.mutateAsync(id);
     }
-  };
-
-  const handleArchive = async (id: string) => {
-    await archiveBirthday.mutateAsync(id);
   };
 
   const handleRefresh = async (id: string) => {
@@ -375,13 +370,6 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                           title={t('common.edit')}
                         >
                           <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleArchive(birthday.id)}
-                          className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-all hover:scale-110"
-                          title={t('common.archive', 'Archive')}
-                        >
-                          <Archive className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(birthday.id)}
