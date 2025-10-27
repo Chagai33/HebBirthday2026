@@ -60,10 +60,6 @@ export const BirthdayForm = ({
   const rootGroups = allGroups.filter(g => g.is_root);
   const childGroups = allGroups.filter(g => !g.is_root);
 
-  console.log('BirthdayForm - All Groups:', allGroups);
-  console.log('BirthdayForm - Root Groups:', rootGroups);
-  console.log('BirthdayForm - Child Groups:', childGroups);
-
   const finalSubmit = async (data: BirthdayFormData) => {
     try {
       if (editBirthday) {

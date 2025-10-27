@@ -133,12 +133,13 @@ export const GroupsPanel = () => {
 
   return (
     <Layout>
-      <div className="space-y-4 px-2 sm:px-0">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('groups.manageGroups')}</h2>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('groups.manageGroups')}</h2>
+          <p className="text-gray-600 mt-2">{t('groups.manageDescription', 'ארגן את אנשי הקשר שלך בקבוצות')}</p>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid gap-4">
           {rootGroups.map((rootGroup) => (
             <CategorySection
               key={rootGroup.id}
@@ -261,91 +262,115 @@ const CategorySection = ({
   const { data: childGroups = [], isLoading } = useChildGroups(isExpanded ? rootGroup.id : null);
 
   return (
-    <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       <div
-        className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-        style={{ borderLeftColor: rootGroup.color, borderLeftWidth: '4px' }}
+        className="flex items-center justify-between p-4 sm:p-5 cursor-pointer hover:bg-gray-50 transition-colors"
+        style={{
+          borderRightColor: rootGroup.color,
+          borderRightWidth: '4px',
+          background: `linear-gradient(to right, ${rootGroup.color}08, transparent)`
+        }}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div
-            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
-            style={{ backgroundColor: rootGroup.color }}
-          />
-          <h3 className="font-bold text-gray-900 text-base sm:text-lg">{rootGroup.name}</h3>
-          {childGroups.length > 0 && (
-            <span className="text-xs sm:text-sm px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-              {childGroups.length}
-            </span>
-          )}
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ backgroundColor: `${rootGroup.color}20` }}
+          >
+            <div
+              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
+              style={{ backgroundColor: rootGroup.color }}
+            />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg sm:text-xl">{rootGroup.name}</h3>
+            {childGroups.length > 0 && (
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                {childGroups.length} {childGroups.length === 1 ? t('groups.group', 'קבוצה') : t('groups.groups', 'קבוצות')}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAddGroup();
             }}
-            className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-2 sm:p-2.5 text-white rounded-lg transition-all hover:scale-105 shadow-sm"
+            style={{ backgroundColor: rootGroup.color }}
             title={t('groups.addGroup')}
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
           )}
         </div>
       </div>
 
       {isExpanded && (
-        <div className="border-t border-gray-200 p-2 sm:p-3 bg-gray-50">
+        <div className="border-t border-gray-200 p-4 bg-gradient-to-b from-gray-50 to-white">
           {isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: rootGroup.color }}></div>
             </div>
           ) : childGroups.length === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <p className="text-sm text-gray-500 mb-3">
+            <div className="text-center py-8 sm:py-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
                 {t('groups.noGroups', { category: rootGroup.name })}
               </p>
               <button
                 onClick={onAddGroup}
-                className="text-sm px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all hover:scale-105 shadow-sm"
+                style={{ backgroundColor: rootGroup.color }}
               >
                 {t('groups.addGroup')}
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="grid gap-3">
               {childGroups.map((group) => (
                 <div
                   key={group.id}
-                  className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 hover:border-gray-300 transition-colors"
-                  style={{ borderLeftColor: group.color, borderLeftWidth: '3px' }}
+                  className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all hover:scale-[1.02] group"
+                  style={{
+                    borderRightColor: group.color,
+                    borderRightWidth: '3px'
+                  }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: group.color }}
-                      />
-                      <span className="font-medium text-gray-900 text-sm sm:text-base">{group.name}</span>
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${group.color}20` }}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: group.color }}
+                        />
+                      </div>
+                      <span className="font-semibold text-gray-900 text-sm sm:text-base">{group.name}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => onEditGroup(group)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title={t('common.edit')}
                       >
-                        <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDeleteGroup(group.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title={t('common.delete')}
                       >
-                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

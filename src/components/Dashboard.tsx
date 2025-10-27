@@ -188,63 +188,63 @@ export const Dashboard = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-md border border-blue-200 p-6 hover:shadow-xl transition-all hover:scale-105">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Users className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-blue-700 font-medium mb-1">
                   {t('dashboard.totalBirthdays')}
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.totalBirthdays}</p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                <p className="text-4xl font-bold text-blue-900">{stats.totalBirthdays}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-md border border-green-200 p-6 hover:shadow-xl transition-all hover:scale-105">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-green-700 font-medium mb-1">
                   {t('dashboard.upcomingThisWeek')}
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                <p className="text-4xl font-bold text-green-900">
                   {stats.upcomingThisWeek}
                 </p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl shadow-md border border-orange-200 p-6 hover:shadow-xl transition-all hover:scale-105">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-14 h-14 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Calendar className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-orange-700 font-medium mb-1">
                   {t('dashboard.upcomingThisMonth')}
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-orange-600">
+                <p className="text-4xl font-bold text-orange-900">
                   {stats.upcomingThisMonth}
                 </p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-0.5 sm:mb-1">{t('dashboard.statistics')}</p>
-                <p className="text-base sm:text-lg font-bold text-gray-900">
+          <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl shadow-md border border-pink-200 p-6 hover:shadow-xl transition-all hover:scale-105">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-14 h-14 bg-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Cake className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-pink-700 font-medium mb-1">{t('dashboard.statistics')}</p>
+                <p className="text-2xl font-bold text-pink-900">
                   {stats.maleCount}M / {stats.femaleCount}F
                 </p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Cake className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
             </div>
           </div>

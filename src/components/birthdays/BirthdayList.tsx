@@ -223,12 +223,12 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-start">
+                <th className="px-6 py-4 text-start">
                   <input
                     type="checkbox"
                     checked={
@@ -236,25 +236,25 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       filteredAndSortedBirthdays.length > 0
                     }
                     onChange={toggleSelectAll}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.firstName')}
                 </th>
-                <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.lastName')}
                 </th>
-                <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.birthDate')}
                 </th>
-                <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.hebrewDate')}
                 </th>
-                <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.nextHebrewBirthday')}
                 </th>
-                <th className="px-4 py-3 text-end text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-end text-sm font-bold text-gray-900">
                   {t('common.actions', 'Actions')}
                 </th>
               </tr>
@@ -277,43 +277,48 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                   return (
                     <tr
                       key={birthday.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="hover:bg-blue-50 transition-all group"
                       style={{
-                        borderLeft: birthdayGroup ? `4px solid ${birthdayGroup.color}` : undefined,
+                        borderRight: birthdayGroup ? `4px solid ${birthdayGroup.color}` : undefined,
                       }}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(birthday.id)}
                           onChange={() => toggleSelect(birthday.id)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
                           {birthdayGroup && (
                             <div
-                              className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: birthdayGroup.color }}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: `${birthdayGroup.color}20` }}
                               title={birthdayGroup.name}
-                            />
+                            >
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: birthdayGroup.color }}
+                              />
+                            </div>
                           )}
-                          <span className="text-sm text-gray-900">{birthday.first_name}</span>
+                          <span className="text-sm font-medium text-gray-900">{birthday.first_name}</span>
                         </div>
                       </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {birthday.last_name}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy', {
                         locale,
                       })}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">
                       {birthday.birth_date_hebrew_string || '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {birthday.next_upcoming_hebrew_birthday ? (
                         <button
                           onClick={() => {
@@ -333,12 +338,12 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         '-'
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleRefresh(birthday.id)}
                           disabled={refreshHebrewData.isPending}
-                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                           title={t('birthday.refresh', 'רענן תאריכים עבריים')}
                         >
                           <RefreshCw className={`w-4 h-4 ${refreshHebrewData.isPending ? 'animate-spin' : ''}`} />
@@ -346,7 +351,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         {onAddToCalendar && (
                           <button
                             onClick={() => onAddToCalendar(birthday)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all hover:scale-110"
                             title={t('birthday.addToCalendar')}
                           >
                             <Calendar className="w-4 h-4" />
@@ -354,21 +359,21 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         )}
                         <button
                           onClick={() => onEdit(birthday)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all hover:scale-110"
                           title={t('common.edit')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleArchive(birthday.id)}
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-all hover:scale-110"
                           title={t('common.archive', 'Archive')}
                         >
                           <Archive className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(birthday.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all hover:scale-110"
                           title={t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
