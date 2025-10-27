@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRootGroups, useChildGroups, useCreateGroup, useUpdateGroup, useDeleteGroup, useInitializeRootGroups } from '../../hooks/useGroups';
+import { groupService } from '../../services/group.service';
 import { Layout } from '../layout/Layout';
 import { Group } from '../../types';
 import { Plus, Edit, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toast } from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
+import { DeleteGroupModal } from '../modals/DeleteGroupModal';
 
 const GROUP_COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16',

@@ -78,8 +78,37 @@ export const groupService = {
     await updateDoc(doc(db, 'groups', groupId), updateData);
   },
 
-  async deleteGroup(groupId: string): Promise<void> {
+  async deleteGroup(groupId: string, deleteBirthdays: boolean = false): Promise<void> {
+    if (deleteBirthdays) {
+      const birthdaysQuery = query(
+        collection(db, 'birthdays'),
+        where('group_id', '==', groupId)
+      );
+      const birthdaysSnapshot = await getDocs(birthdaysQuery);
+      const deletePromises = birthdaysSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+    } else {
+      const birthdaysQuery = query(
+        collection(db, 'birthdays'),
+        where('group_id', '==', groupId)
+      );
+      const birthdaysSnapshot = await getDocs(birthdaysQuery);
+      const updatePromises = birthdaysSnapshot.docs.map(doc =>
+        updateDoc(doc.ref, { group_id: null })
+      );
+      await Promise.all(updatePromises);
+    }
+
     await deleteDoc(doc(db, 'groups', groupId));
+  },
+
+  async getGroupBirthdaysCount(groupId: string): Promise<number> {
+    const q = query(
+      collection(db, 'birthdays'),
+      where('group_id', '==', groupId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.size;
   },
 
   async getGroup(groupId: string): Promise<Group | null> {

@@ -41,9 +41,12 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
     let filtered = birthdays;
 
     if (selectedGroupIds.length > 0) {
-      filtered = filtered.filter((b) =>
-        b.group_id ? selectedGroupIds.includes(b.group_id) : false
-      );
+      filtered = filtered.filter((b) => {
+        if (selectedGroupIds.includes('unassigned')) {
+          return !b.group_id || selectedGroupIds.includes(b.group_id);
+        }
+        return b.group_id ? selectedGroupIds.includes(b.group_id) : false;
+      });
     }
 
     if (searchTerm) {
@@ -173,6 +176,17 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
             )}
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => toggleGroupFilter('unassigned')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-2 ${
+                selectedGroupIds.includes('unassigned')
+                  ? 'bg-gray-200 border-gray-400 text-gray-900'
+                  : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
+              }`}
+            >
+              <div className="w-3 h-3 rounded-full border-2 border-dashed border-gray-400" />
+              {t('birthday.unassigned', 'ללא שיוך')}
+            </button>
             {groups.map((group) => (
               <button
                 key={group.id}
@@ -289,7 +303,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {birthdayGroup && (
+                          {birthdayGroup ? (
                             <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                               style={{ backgroundColor: `${birthdayGroup.color}20` }}
@@ -299,6 +313,13 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                                 className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: birthdayGroup.color }}
                               />
+                            </div>
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 border-2 border-dashed border-gray-300"
+                              title={t('birthday.unassigned', 'ללא שיוך')}
+                            >
+                              <span className="text-xs text-gray-400">?</span>
                             </div>
                           )}
                           <span className="text-sm font-medium text-gray-900">{birthday.first_name}</span>
@@ -364,13 +385,24 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                             <Calendar className="w-4 h-4" />
                           </button>
                         )}
-                        <button
-                          onClick={() => onEdit(birthday)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all hover:scale-110"
-                          title={t('common.edit')}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {!birthday.group_id && (
+                          <button
+                            onClick={() => onEdit(birthday)}
+                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all hover:scale-110 animate-pulse"
+                            title={t('birthday.reassign', 'שייך לקבוצה')}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
+                        {birthday.group_id && (
+                          <button
+                            onClick={() => onEdit(birthday)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all hover:scale-110"
+                            title={t('common.edit')}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(birthday.id)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all hover:scale-110"

@@ -105,12 +105,24 @@ export const useDeleteGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (groupId: string) => groupService.deleteGroup(groupId),
+    mutationFn: ({ groupId, deleteBirthdays }: { groupId: string; deleteBirthdays: boolean }) =>
+      groupService.deleteGroup(groupId, deleteBirthdays),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['childGroups'] });
       queryClient.invalidateQueries({ queryKey: ['birthdays'] });
     },
+  });
+};
+
+export const useGroupBirthdaysCount = (groupId: string | null) => {
+  return useQuery({
+    queryKey: ['groupBirthdaysCount', groupId],
+    queryFn: () => {
+      if (!groupId) return Promise.resolve(0);
+      return groupService.getGroupBirthdaysCount(groupId);
+    },
+    enabled: !!groupId,
   });
 };
 
