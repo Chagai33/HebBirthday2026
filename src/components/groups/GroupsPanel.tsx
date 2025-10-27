@@ -41,7 +41,7 @@ export const GroupsPanel = () => {
     if (rootGroups.length === 0 && !isLoading) {
       initializeRootGroups.mutate('he');
     }
-  }, [rootGroups.length, isLoading]);
+  }, [rootGroups.length, isLoading, initializeRootGroups]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {

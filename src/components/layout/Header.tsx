@@ -3,16 +3,20 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { LogOut, Users, Globe, Menu, X, FolderTree } from 'lucide-react';
+import { useGroupFilter } from '../../contexts/GroupFilterContext';
+import { useGroups } from '../../hooks/useGroups';
+import { LogOut, Globe, Menu, X, FolderTree, Filter } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
-  const { currentTenant, userTenants, switchTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showGroupFilter, setShowGroupFilter] = useState(false);
+  const { selectedGroupIds, toggleGroupFilter, clearGroupFilters } = useGroupFilter();
+  const { data: allGroups = [] } = useGroups();
 
   const handleSignOut = async () => {
     await signOut();
@@ -36,38 +40,6 @@ export const Header: React.FC = () => {
               {t('birthday.birthdays')}
             </button>
 
-            {currentTenant && userTenants.length > 1 && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowTenantMenu(!showTenantMenu)}
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-xs sm:text-sm"
-                >
-                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">{currentTenant.name}</span>
-                </button>
-
-                {showTenantMenu && (
-                  <div className="absolute top-full mt-2 start-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
-                    {userTenants.map((tenant) => (
-                      <button
-                        key={tenant.id}
-                        onClick={() => {
-                          switchTenant(tenant.id);
-                          setShowTenantMenu(false);
-                        }}
-                        className={`w-full text-start px-4 py-2 hover:bg-gray-50 ${
-                          tenant.id === currentTenant.id
-                            ? 'bg-blue-50 text-blue-700'
-                            : ''
-                        }`}
-                      >
-                        {tenant.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -75,6 +47,37 @@ export const Header: React.FC = () => {
               <span className="text-sm text-gray-600">
                 {user.display_name || user.email}
               </span>
+            )}
+
+            {location.pathname === '/' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowGroupFilter(!showGroupFilter)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    selectedGroupIds.length > 0
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm">{t('groups.filterByGroup')}</span>
+                  {selectedGroupIds.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 bg-white text-blue-600 text-xs font-bold rounded-full">
+                      {selectedGroupIds.length}
+                    </span>
+                  )}
+                </button>
+
+                {showGroupFilter && (
+                  <GroupFilterDropdown
+                    allGroups={allGroups}
+                    selectedGroupIds={selectedGroupIds}
+                    toggleGroupFilter={toggleGroupFilter}
+                    clearGroupFilters={clearGroupFilters}
+                    onClose={() => setShowGroupFilter(false)}
+                  />
+                )}
+              </div>
             )}
 
             <button
@@ -156,5 +159,85 @@ export const Header: React.FC = () => {
         )}
       </div>
     </header>
+  );
+};
+
+interface GroupFilterDropdownProps {
+  allGroups: any[];
+  selectedGroupIds: string[];
+  toggleGroupFilter: (id: string) => void;
+  clearGroupFilters: () => void;
+  onClose: () => void;
+}
+
+const GroupFilterDropdown: React.FC<GroupFilterDropdownProps> = ({
+  allGroups,
+  selectedGroupIds,
+  toggleGroupFilter,
+  clearGroupFilters,
+  onClose,
+}) => {
+  const { t } = useTranslation();
+  const rootGroups = allGroups.filter(g => g.is_root);
+  const childGroups = allGroups.filter(g => !g.is_root);
+
+  return (
+    <div className="absolute top-full mt-2 start-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[280px] max-h-[400px] overflow-y-auto">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+        <span className="text-sm font-semibold text-gray-700">
+          {t('groups.filterByGroup')}
+        </span>
+        {selectedGroupIds.length > 0 && (
+          <button
+            onClick={() => {
+              clearGroupFilters();
+              onClose();
+            }}
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+          >
+            {t('common.clear', 'נקה הכל')}
+          </button>
+        )}
+      </div>
+
+      <div className="py-2">
+        {rootGroups.map((root) => {
+          const children = childGroups.filter(c => c.parent_id === root.id);
+          if (children.length === 0) return null;
+
+          return (
+            <div key={root.id} className="mb-2">
+              <div className="px-4 py-1 flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: root.color }}
+                />
+                <span className="text-xs font-semibold text-gray-500 uppercase">
+                  {root.name}
+                </span>
+              </div>
+              {children.map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => toggleGroupFilter(group.id)}
+                  className={`w-full px-6 py-2 text-start hover:bg-gray-50 flex items-center justify-between ${
+                    selectedGroupIds.includes(group.id) ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <span className="text-sm text-gray-700">{group.name}</span>
+                  {selectedGroupIds.includes(group.id) && (
+                    <div className="w-4 h-4 bg-blue-600 rounded-sm flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };

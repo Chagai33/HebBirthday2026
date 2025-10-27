@@ -5,6 +5,7 @@ import { BirthdayList } from './birthdays/BirthdayList';
 import { BirthdayForm } from './birthdays/BirthdayForm';
 import { useBirthdays } from '../hooks/useBirthdays';
 import { useTenant } from '../contexts/TenantContext';
+import { useGroupFilter } from '../contexts/GroupFilterContext';
 import { Birthday, DashboardStats } from '../types';
 import { Plus, Users, Calendar, TrendingUp, Cake } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
@@ -13,13 +14,19 @@ import { googleCalendarService } from '../services/google-calendar.service';
 export const Dashboard = () => {
   const { t } = useTranslation();
   const { currentTenant, createTenant } = useTenant();
-  const { data: birthdays = [], isLoading } = useBirthdays();
+  const { data: allBirthdays = [], isLoading } = useBirthdays();
+  const { selectedGroupIds } = useGroupFilter();
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
   const [showCreateTenant, setShowCreateTenant] = useState(false);
   const [tenantName, setTenantName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  const birthdays = useMemo(() => {
+    if (selectedGroupIds.length === 0) return allBirthdays;
+    return allBirthdays.filter(b => b.group_id && selectedGroupIds.includes(b.group_id));
+  }, [allBirthdays, selectedGroupIds]);
 
   useEffect(() => {
     googleCalendarService.initialize().catch(console.error);
