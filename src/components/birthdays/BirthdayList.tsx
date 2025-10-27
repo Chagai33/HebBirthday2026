@@ -6,8 +6,9 @@ import { he, enUS } from 'date-fns/locale';
 import { useDeleteBirthday, useArchiveBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
 import { useGroups } from '../../hooks/useGroups';
 import { useGroupFilter } from '../../contexts/GroupFilterContext';
-import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw, Filter } from 'lucide-react';
+import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
+import { WishlistModal } from '../modals/WishlistModal';
 
 interface BirthdayListProps {
   birthdays: Birthday[];
@@ -31,6 +32,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showFutureModal, setShowFutureModal] = useState(false);
+  const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
   const [showGroupFilter, setShowGroupFilter] = useState(false);
 
@@ -341,6 +343,16 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
+                          onClick={() => {
+                            setSelectedBirthday(birthday);
+                            setShowWishlistModal(true);
+                          }}
+                          className="p-2 text-pink-600 hover:bg-pink-100 rounded-lg transition-all hover:scale-110"
+                          title={t('wishlist.title', 'רשימת משאלות')}
+                        >
+                          <Gift className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleRefresh(birthday.id)}
                           disabled={refreshHebrewData.isPending}
                           className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -395,6 +407,17 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         name={selectedBirthday ? `${selectedBirthday.first_name} ${selectedBirthday.last_name}` : ''}
         futureDates={selectedBirthday?.future_hebrew_birthdays || []}
       />
+
+      {selectedBirthday && (
+        <WishlistModal
+          isOpen={showWishlistModal}
+          onClose={() => {
+            setShowWishlistModal(false);
+            setSelectedBirthday(null);
+          }}
+          birthday={selectedBirthday}
+        />
+      )}
     </div>
   );
 };

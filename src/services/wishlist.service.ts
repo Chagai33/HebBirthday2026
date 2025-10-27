@@ -57,13 +57,18 @@ export const wishlistService = {
   async getItemsForBirthday(birthdayId: string): Promise<WishlistItem[]> {
     const q = query(
       collection(db, 'wishlist_items'),
-      where('birthday_id', '==', birthdayId),
-      orderBy('priority', 'asc'),
-      orderBy('created_at', 'desc')
+      where('birthday_id', '==', birthdayId)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => this.docToWishlistItem(doc.id, doc.data()));
+    const items = snapshot.docs.map((doc) => this.docToWishlistItem(doc.id, doc.data()));
+
+    const priorityOrder = { high: 1, medium: 2, low: 3 };
+    return items.sort((a, b) => {
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   },
 
   docToWishlistItem(id: string, data: any): WishlistItem {
