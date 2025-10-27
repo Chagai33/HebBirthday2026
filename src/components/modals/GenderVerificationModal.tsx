@@ -55,12 +55,6 @@ export const GenderVerificationModal: React.FC<GenderVerificationModalProps> = (
           >
             {t('common.female')}
           </button>
-          <button
-            onClick={() => onConfirm('other')}
-            className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 font-medium transition-colors text-start"
-          >
-            {t('common.other')}
-          </button>
         </div>
 
         <button

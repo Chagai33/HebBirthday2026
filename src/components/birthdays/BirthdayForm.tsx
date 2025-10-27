@@ -303,7 +303,6 @@ export const BirthdayForm = ({
                   <option value="">{t('common.select')}</option>
                   <option value="male">{t('common.male')}</option>
                   <option value="female">{t('common.female')}</option>
-                  <option value="other">{t('common.other')}</option>
                 </select>
               </div>
 
