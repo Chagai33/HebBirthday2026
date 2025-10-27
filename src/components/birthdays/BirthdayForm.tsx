@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { BirthdayFormData, Gender, Birthday } from '../../types';
 import { useCreateBirthday, useUpdateBirthday, useCheckDuplicates } from '../../hooks/useBirthdays';
-import { useRootGroups, useChildGroups } from '../../hooks/useGroups';
+import { useGroups } from '../../hooks/useGroups';
 import { DuplicateVerificationModal } from '../modals/DuplicateVerificationModal';
 import { SunsetVerificationModal } from '../modals/SunsetVerificationModal';
 import { GenderVerificationModal } from '../modals/GenderVerificationModal';
@@ -28,7 +28,7 @@ export const BirthdayForm = ({
   const createBirthday = useCreateBirthday();
   const updateBirthday = useUpdateBirthday();
   const checkDuplicates = useCheckDuplicates();
-  const { data: rootGroups = [] } = useRootGroups();
+  const { data: allGroups = [] } = useGroups();
   const { toasts, hideToast, success: showSuccess, error: showError } = useToast();
 
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -40,7 +40,6 @@ export const BirthdayForm = ({
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<BirthdayFormData>({
     defaultValues: editBirthday
@@ -58,21 +57,8 @@ export const BirthdayForm = ({
         },
   });
 
-  const allChildGroups = useMemo(() => {
-    const groups: { id: string; name: string; parentName: string; parentId: string }[] = [];
-    rootGroups.forEach(root => {
-      const { data: children = [] } = useChildGroups(root.id);
-      children.forEach(child => {
-        groups.push({
-          id: child.id,
-          name: child.name,
-          parentName: root.name,
-          parentId: root.id,
-        });
-      });
-    });
-    return groups;
-  }, [rootGroups]);
+  const rootGroups = allGroups.filter(g => g.is_root);
+  const childGroups = allGroups.filter(g => !g.is_root);
 
   const finalSubmit = async (data: BirthdayFormData) => {
     try {
@@ -165,11 +151,6 @@ export const BirthdayForm = ({
     }
   };
 
-  const groupedOptions = rootGroups.map(root => {
-    const children = allChildGroups.filter(g => g.parentId === root.id);
-    return { root, children };
-  });
-
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
@@ -247,15 +228,19 @@ export const BirthdayForm = ({
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">{t('birthday.selectGroup')}</option>
-                {groupedOptions.map(({ root, children }) => (
-                  <optgroup key={root.id} label={root.name}>
-                    {children.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
+                {rootGroups.map((root) => {
+                  const children = childGroups.filter(c => c.parent_id === root.id);
+                  if (children.length === 0) return null;
+                  return (
+                    <optgroup key={root.id} label={root.name}>
+                      {children.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
               </select>
               {errors.groupId && (
                 <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.groupId.message}</p>
