@@ -6,6 +6,8 @@ import { BirthdayForm } from './birthdays/BirthdayForm';
 import { useBirthdays } from '../hooks/useBirthdays';
 import { useTenant } from '../contexts/TenantContext';
 import { useGroupFilter } from '../contexts/GroupFilterContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useRootGroups, useInitializeRootGroups } from '../hooks/useGroups';
 import { Birthday, DashboardStats } from '../types';
 import { Plus, Users, Calendar, TrendingUp, Cake } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
@@ -13,9 +15,12 @@ import { googleCalendarService } from '../services/google-calendar.service';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { currentTenant, createTenant } = useTenant();
   const { data: allBirthdays = [], isLoading } = useBirthdays();
   const { selectedGroupIds } = useGroupFilter();
+  const { data: rootGroups = [], isLoading: isLoadingGroups } = useRootGroups();
+  const initializeRootGroups = useInitializeRootGroups();
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
@@ -31,6 +36,13 @@ export const Dashboard = () => {
   useEffect(() => {
     googleCalendarService.initialize().catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (currentTenant && user && !isLoadingGroups && rootGroups.length === 0) {
+      console.log('Initializing root groups for tenant:', currentTenant.id);
+      initializeRootGroups.mutate(currentTenant.default_language || 'he');
+    }
+  }, [currentTenant, user, isLoadingGroups, rootGroups.length, initializeRootGroups]);
 
   const stats: DashboardStats = useMemo(() => {
     const now = new Date();
