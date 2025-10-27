@@ -111,15 +111,30 @@ export const GroupsPanel = () => {
     }
   };
 
-  const handleDelete = async (groupId: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
-      try {
-        await deleteGroup.mutateAsync(groupId);
-        success(t('groups.groupDeleted'));
-      } catch (err) {
-        error(t('common.error'));
-        console.error('Error deleting group:', err);
-      }
+  const handleDeleteClick = async (group: Group) => {
+    try {
+      const count = await groupService.getGroupBirthdaysCount(group.id);
+      setDeleteRecordCount(count);
+      setDeletingGroup({ id: group.id, name: group.name });
+    } catch (err) {
+      error(t('common.error'));
+      console.error('Error getting birthdays count:', err);
+    }
+  };
+
+  const handleDeleteConfirm = async (deleteBirthdays: boolean) => {
+    if (!deletingGroup) return;
+
+    try {
+      await deleteGroup.mutateAsync({
+        groupId: deletingGroup.id,
+        deleteBirthdays,
+      });
+      success(t('groups.groupDeleted'));
+      setDeletingGroup(null);
+    } catch (err) {
+      error(t('common.error'));
+      console.error('Error deleting group:', err);
     }
   };
 
@@ -150,7 +165,7 @@ export const GroupsPanel = () => {
               onToggle={() => toggleCategory(rootGroup.id)}
               onAddGroup={() => handleOpenForm(rootGroup.id)}
               onEditGroup={(group) => handleOpenForm(rootGroup.id, group)}
-              onDeleteGroup={handleDelete}
+              onDeleteGroup={handleDeleteClick}
             />
           ))}
         </div>
@@ -229,6 +244,14 @@ export const GroupsPanel = () => {
             </div>
           </div>
         )}
+
+        <DeleteGroupModal
+          isOpen={!!deletingGroup}
+          onClose={() => setDeletingGroup(null)}
+          onConfirm={handleDeleteConfirm}
+          groupName={deletingGroup?.name || ''}
+          recordCount={deleteRecordCount}
+        />
 
         {toasts.map((toast) => (
           <Toast
