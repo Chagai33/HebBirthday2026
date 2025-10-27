@@ -274,7 +274,7 @@ interface CategorySectionProps {
   onToggle: () => void;
   onAddGroup: () => void;
   onEditGroup: (group: Group) => void;
-  onDeleteGroup: (groupId: string) => void;
+  onDeleteGroup: (group: Group) => void;
 }
 
 const CategorySection = ({
@@ -393,7 +393,7 @@ const CategorySection = ({
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => onDeleteGroup(group.id)}
+                        onClick={() => onDeleteGroup(group)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title={t('common.delete')}
                       >
