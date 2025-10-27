@@ -23,7 +23,7 @@ export const birthdayService = {
   ): Promise<string> {
     const birthdayRef = await addDoc(collection(db, 'birthdays'), {
       tenant_id: tenantId,
-      group_id: data.groupId || null,
+      group_id: data.groupId,
       first_name: data.firstName,
       last_name: data.lastName,
       birth_date_gregorian: data.birthDateGregorian.toISOString().split('T')[0],
@@ -139,13 +139,20 @@ export const birthdayService = {
   },
 
   async checkDuplicates(
-    tenantId: string,
+    groupId: string,
     firstName: string,
     lastName: string
   ): Promise<Birthday[]> {
-    const allBirthdays = await this.getTenantBirthdays(tenantId);
+    const q = query(
+      collection(db, 'birthdays'),
+      where('group_id', '==', groupId),
+      where('archived', '==', false)
+    );
 
-    return allBirthdays.filter(
+    const snapshot = await getDocs(q);
+    const groupBirthdays = snapshot.docs.map((doc) => this.docToBirthday(doc.id, doc.data()));
+
+    return groupBirthdays.filter(
       (birthday) =>
         birthday.first_name.toLowerCase() === firstName.toLowerCase() &&
         birthday.last_name.toLowerCase() === lastName.toLowerCase()

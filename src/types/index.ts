@@ -2,7 +2,7 @@ export type Gender = 'male' | 'female' | 'other';
 
 export type UserRole = 'owner' | 'admin' | 'member';
 
-export type GroupType = 'family' | 'friends' | 'work' | 'other' | 'custom';
+export type GroupType = 'family' | 'friends' | 'work';
 
 export type WishlistPriority = 'high' | 'medium' | 'low';
 
@@ -38,7 +38,9 @@ export interface Group {
   id: string;
   tenant_id: string;
   name: string;
-  type: GroupType;
+  parent_id: string | null;
+  is_root: boolean;
+  type?: GroupType;
   color: string;
   created_at: string;
   updated_at: string;
@@ -82,7 +84,7 @@ export interface BirthdayFormData {
   birthDateGregorian: Date;
   afterSunset?: boolean;
   gender?: Gender;
-  groupId?: string;
+  groupId: string;
   notes?: string;
 }
 

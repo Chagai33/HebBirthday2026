@@ -113,19 +113,18 @@ export const useArchiveBirthday = () => {
 };
 
 export const useCheckDuplicates = () => {
-  const { currentTenant } = useTenant();
-
   return useMutation({
     mutationFn: async ({
+      groupId,
       firstName,
       lastName,
     }: {
+      groupId: string;
       firstName: string;
       lastName: string;
     }) => {
-      if (!currentTenant) throw new Error('No tenant');
       return await birthdayService.checkDuplicates(
-        currentTenant.id,
+        groupId,
         firstName,
         lastName
       );

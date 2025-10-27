@@ -17,6 +17,43 @@ export const useGroups = () => {
   });
 };
 
+export const useRootGroups = () => {
+  const { currentTenant } = useTenant();
+
+  return useQuery({
+    queryKey: ['rootGroups', currentTenant?.id],
+    queryFn: () => {
+      if (!currentTenant) return Promise.resolve([]);
+      return groupService.getRootGroups(currentTenant.id);
+    },
+    enabled: !!currentTenant,
+  });
+};
+
+export const useChildGroups = (parentId: string | null) => {
+  return useQuery({
+    queryKey: ['childGroups', parentId],
+    queryFn: () => {
+      if (!parentId) return Promise.resolve([]);
+      return groupService.getChildGroups(parentId);
+    },
+    enabled: !!parentId,
+  });
+};
+
+export const useGroupsByType = (type: GroupType | null) => {
+  const { currentTenant } = useTenant();
+
+  return useQuery({
+    queryKey: ['groupsByType', currentTenant?.id, type],
+    queryFn: () => {
+      if (!currentTenant || !type) return Promise.resolve([]);
+      return groupService.getGroupsByType(currentTenant.id, type);
+    },
+    enabled: !!currentTenant && !!type,
+  });
+};
+
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
   const { currentTenant } = useTenant();
@@ -25,20 +62,21 @@ export const useCreateGroup = () => {
   return useMutation({
     mutationFn: async ({
       name,
-      type,
+      parentId,
       color,
     }: {
       name: string;
-      type: GroupType;
+      parentId: string;
       color: string;
     }) => {
       if (!currentTenant || !user) {
         throw new Error('No tenant or user found');
       }
-      return groupService.createGroup(currentTenant.id, name, type, color, user.id);
+      return groupService.createGroup(currentTenant.id, name, parentId, color, user.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['childGroups'] });
     },
   });
 };
@@ -52,12 +90,13 @@ export const useUpdateGroup = () => {
       data,
     }: {
       groupId: string;
-      data: { name?: string; type?: GroupType; color?: string };
+      data: { name?: string; color?: string };
     }) => {
       return groupService.updateGroup(groupId, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['childGroups'] });
     },
   });
 };
@@ -69,7 +108,27 @@ export const useDeleteGroup = () => {
     mutationFn: (groupId: string) => groupService.deleteGroup(groupId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['childGroups'] });
       queryClient.invalidateQueries({ queryKey: ['birthdays'] });
+    },
+  });
+};
+
+export const useInitializeRootGroups = () => {
+  const queryClient = useQueryClient();
+  const { currentTenant } = useTenant();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (language: 'he' | 'en' = 'he') => {
+      if (!currentTenant || !user) {
+        throw new Error('No tenant or user found');
+      }
+      return groupService.initializeRootGroups(currentTenant.id, user.id, language);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['rootGroups'] });
     },
   });
 };

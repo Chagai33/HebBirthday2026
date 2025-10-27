@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { BirthdayFormData, Gender, Birthday } from '../../types';
 import { useCreateBirthday, useUpdateBirthday, useCheckDuplicates } from '../../hooks/useBirthdays';
-import { useGroups } from '../../hooks/useGroups';
+import { useRootGroups, useChildGroups } from '../../hooks/useGroups';
 import { DuplicateVerificationModal } from '../modals/DuplicateVerificationModal';
 import { SunsetVerificationModal } from '../modals/SunsetVerificationModal';
 import { GenderVerificationModal } from '../modals/GenderVerificationModal';
 import { X, Save } from 'lucide-react';
+import { Toast } from '../common/Toast';
+import { useToast } from '../../hooks/useToast';
 
 interface BirthdayFormProps {
   onClose: () => void;
@@ -26,7 +28,8 @@ export const BirthdayForm = ({
   const createBirthday = useCreateBirthday();
   const updateBirthday = useUpdateBirthday();
   const checkDuplicates = useCheckDuplicates();
-  const { data: groups = [] } = useGroups();
+  const { data: rootGroups = [] } = useRootGroups();
+  const { toasts, hideToast, success: showSuccess, error: showError } = useToast();
 
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showSunsetModal, setShowSunsetModal] = useState(false);
@@ -37,6 +40,7 @@ export const BirthdayForm = ({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<BirthdayFormData>({
     defaultValues: editBirthday
@@ -50,9 +54,25 @@ export const BirthdayForm = ({
           notes: editBirthday.notes,
         }
       : {
-          groupId: defaultGroupId,
+          groupId: defaultGroupId || '',
         },
   });
+
+  const allChildGroups = useMemo(() => {
+    const groups: { id: string; name: string; parentName: string; parentId: string }[] = [];
+    rootGroups.forEach(root => {
+      const { data: children = [] } = useChildGroups(root.id);
+      children.forEach(child => {
+        groups.push({
+          id: child.id,
+          name: child.name,
+          parentName: root.name,
+          parentId: root.id,
+        });
+      });
+    });
+    return groups;
+  }, [rootGroups]);
 
   const finalSubmit = async (data: BirthdayFormData) => {
     try {
@@ -61,19 +81,28 @@ export const BirthdayForm = ({
           birthdayId: editBirthday.id,
           data,
         });
+        showSuccess(t('messages.birthdayUpdated'));
       } else {
         await createBirthday.mutateAsync(data);
+        showSuccess(t('messages.birthdayAdded'));
       }
       onSuccess();
       onClose();
     } catch (error) {
+      showError(t('common.error'));
       console.error('Error saving birthday:', error);
     }
   };
 
   const onSubmit = async (data: BirthdayFormData) => {
+    if (!data.groupId) {
+      showError(t('birthday.selectGroup'));
+      return;
+    }
+
     if (!editBirthday) {
       const result = await checkDuplicates.mutateAsync({
+        groupId: data.groupId,
         firstName: data.firstName,
         lastName: data.lastName,
       });
@@ -136,24 +165,29 @@ export const BirthdayForm = ({
     }
   };
 
+  const groupedOptions = rootGroups.map(root => {
+    const children = allChildGroups.filter(g => g.parentId === root.id);
+    return { root, children };
+  });
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
               {editBirthday ? t('birthday.editBirthday') : t('birthday.addBirthday')}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('birthday.firstName')} *
@@ -162,10 +196,10 @@ export const BirthdayForm = ({
                   {...register('firstName', {
                     required: t('validation.required'),
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {errors.firstName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.firstName.message}</p>
                 )}
               </div>
 
@@ -177,10 +211,10 @@ export const BirthdayForm = ({
                   {...register('lastName', {
                     required: t('validation.required'),
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {errors.lastName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.lastName.message}</p>
                 )}
               </div>
             </div>
@@ -195,39 +229,63 @@ export const BirthdayForm = ({
                   required: t('validation.required'),
                   valueAsDate: true,
                 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.birthDateGregorian && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-500 text-xs sm:text-sm mt-1">
                   {errors.birthDateGregorian.message}
                 </p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('birthday.group')} *
+              </label>
+              <select
+                {...register('groupId', { required: t('validation.required') })}
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">{t('birthday.selectGroup')}</option>
+                {groupedOptions.map(({ root, children }) => (
+                  <optgroup key={root.id} label={root.name}>
+                    {children.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {errors.groupId && (
+                <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.groupId.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('birthday.gender')}
                 </label>
                 <select
                   {...register('gender')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">{t('common.select', 'Select')}</option>
+                  <option value="">{t('common.select')}</option>
                   <option value="male">{t('common.male')}</option>
                   <option value="female">{t('common.female')}</option>
                   <option value="other">{t('common.other')}</option>
                 </select>
               </div>
 
-              <div className="flex items-center">
+              <div className="flex items-end pb-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     {...register('afterSunset')}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">
                     {t('birthday.afterSunset')}
                   </span>
                 </label>
@@ -236,46 +294,29 @@ export const BirthdayForm = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('birthday.group')}
-              </label>
-              <select
-                {...register('groupId')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">{t('birthday.noGroup')}</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('birthday.notes')}
               </label>
               <textarea
                 {...register('notes')}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={2}
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
               >
                 {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={createBirthday.isPending || updateBirthday.isPending}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Save className="w-5 h-5" />
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                 {createBirthday.isPending || updateBirthday.isPending
                   ? t('common.loading')
                   : t('common.save')}
@@ -303,6 +344,15 @@ export const BirthdayForm = ({
         onClose={() => setShowGenderModal(false)}
         onConfirm={handleGenderConfirm}
       />
+
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => hideToast(toast.id)}
+        />
+      ))}
     </>
   );
 };

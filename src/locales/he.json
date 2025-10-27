@@ -91,13 +91,16 @@
     "work": "עבודה",
     "other": "אחר",
     "custom": "מותאם אישית",
-    "noGroups": "אין קבוצות עדיין",
+    "noGroups": "אין קבוצות תחת {{category}}",
+    "noGroupsYet": "טרם נוצרו קבוצות",
     "createFirstGroup": "צור את הקבוצה הראשונה שלך",
     "filterByGroup": "סינון לפי קבוצה",
     "allGroups": "כל הקבוצות",
     "groupDeleted": "הקבוצה נמחקה בהצלחה",
     "groupCreated": "הקבוצה נוצרה בהצלחה",
-    "groupUpdated": "הקבוצה עודכנה בהצלחה"
+    "groupUpdated": "הקבוצה עודכנה בהצלחה",
+    "addGroupUnder": "הוסף קבוצה תחת {{category}}",
+    "selectCategory": "בחר קטגוריה"
   },
   "wishlist": {
     "wishlist": "רשימת משאלות",
@@ -125,7 +128,7 @@
   "modals": {
     "duplicateVerification": {
       "title": "כפילות אפשרית",
-      "message": "אדם עם שם דומה כבר קיים. האם להמשיך?",
+      "message": "אדם עם שם דומה כבר קיים בקבוצה זו. האם להמשיך?",
       "existingPerson": "אדם קיים"
     },
     "sunsetVerification": {

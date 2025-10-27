@@ -12,13 +12,14 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Tenant, UserRole } from '../types';
+import { groupService } from './group.service';
 
 export const tenantService = {
-  async createTenant(name: string, ownerId: string): Promise<string> {
+  async createTenant(name: string, ownerId: string, language: 'he' | 'en' = 'he'): Promise<string> {
     const tenantRef = await addDoc(collection(db, 'tenants'), {
       name,
       owner_id: ownerId,
-      default_language: 'he',
+      default_language: language,
       timezone: 'Asia/Jerusalem',
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
@@ -30,6 +31,8 @@ export const tenantService = {
       role: 'owner',
       joined_at: serverTimestamp(),
     });
+
+    await groupService.initializeRootGroups(tenantRef.id, ownerId, language);
 
     return tenantRef.id;
   },
