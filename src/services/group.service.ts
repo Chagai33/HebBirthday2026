@@ -79,13 +79,17 @@ export const groupService = {
   },
 
   async deleteGroup(groupId: string, deleteBirthdays: boolean = false): Promise<void> {
+    if (!groupId) {
+      throw new Error('Group ID is required');
+    }
+
     if (deleteBirthdays) {
       const birthdaysQuery = query(
         collection(db, 'birthdays'),
         where('group_id', '==', groupId)
       );
       const birthdaysSnapshot = await getDocs(birthdaysQuery);
-      const deletePromises = birthdaysSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      const deletePromises = birthdaysSnapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
       await Promise.all(deletePromises);
     } else {
       const birthdaysQuery = query(
@@ -93,8 +97,8 @@ export const groupService = {
         where('group_id', '==', groupId)
       );
       const birthdaysSnapshot = await getDocs(birthdaysQuery);
-      const updatePromises = birthdaysSnapshot.docs.map(doc =>
-        updateDoc(doc.ref, { group_id: null })
+      const updatePromises = birthdaysSnapshot.docs.map(docSnap =>
+        updateDoc(docSnap.ref, { group_id: null })
       );
       await Promise.all(updatePromises);
     }
