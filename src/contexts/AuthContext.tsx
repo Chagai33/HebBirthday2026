@@ -26,11 +26,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const currentUser = await authService.getCurrentUser();
+          let currentUser = await authService.getCurrentUser();
+          let retries = 0;
+          const maxRetries = 5;
+
+          while (!currentUser && retries < maxRetries) {
+            console.warn(`User profile not found, retrying (${retries + 1}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            currentUser = await authService.getCurrentUser();
+            retries++;
+          }
+
           if (currentUser) {
             setUser(currentUser);
           } else {
-            console.warn('User profile not found, signing out');
+            console.error('User profile not found after multiple retries, signing out');
             await authService.signOut();
             setUser(null);
           }
