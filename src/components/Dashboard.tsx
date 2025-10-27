@@ -11,7 +11,7 @@ import { useRootGroups, useInitializeRootGroups } from '../hooks/useGroups';
 import { Birthday, DashboardStats } from '../types';
 import { Plus, Users, Calendar, TrendingUp, Cake } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
-import { googleCalendarService } from '../services/google-calendar.service';
+import { openGoogleCalendarForBirthday } from '../utils/googleCalendar';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
@@ -76,13 +76,12 @@ export const Dashboard = () => {
     setEditBirthday(null);
   };
 
-  const handleAddToCalendar = async (birthday: Birthday) => {
+  const handleAddToCalendar = (birthday: Birthday) => {
     try {
-      await googleCalendarService.addBirthdayToCalendar(birthday);
-      alert(t('messages.calendarSuccess', 'Birthday added to Google Calendar successfully!'));
+      openGoogleCalendarForBirthday(birthday);
     } catch (error) {
-      console.error('Error adding to calendar:', error);
-      alert(t('messages.calendarError', 'Failed to add birthday to calendar. Please try again.'));
+      console.error('Error opening Google Calendar:', error);
+      alert(t('messages.calendarError', 'לא ניתן לפתוח את Google Calendar. אנא נסה שנית.'));
     }
   };
 
