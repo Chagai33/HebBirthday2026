@@ -92,35 +92,35 @@ export const groupService = {
   async getTenantGroups(tenantId: string): Promise<Group[]> {
     const q = query(
       collection(db, 'groups'),
-      where('tenant_id', '==', tenantId),
-      orderBy('name', 'asc')
+      where('tenant_id', '==', tenantId)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    const groups = snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    return groups.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   async getRootGroups(tenantId: string): Promise<Group[]> {
     const q = query(
       collection(db, 'groups'),
       where('tenant_id', '==', tenantId),
-      where('is_root', '==', true),
-      orderBy('name', 'asc')
+      where('is_root', '==', true)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    const groups = snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    return groups.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   async getChildGroups(parentId: string): Promise<Group[]> {
     const q = query(
       collection(db, 'groups'),
-      where('parent_id', '==', parentId),
-      orderBy('name', 'asc')
+      where('parent_id', '==', parentId)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    const groups = snapshot.docs.map((doc) => this.docToGroup(doc.id, doc.data()));
+    return groups.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   async getGroupsByType(tenantId: string, type: GroupType): Promise<Group[]> {
