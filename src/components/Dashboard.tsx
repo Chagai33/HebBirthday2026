@@ -12,6 +12,7 @@ import { Birthday, DashboardStats } from '../types';
 import { Plus, Users, Calendar, TrendingUp, Cake } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
 import { openGoogleCalendarForBirthday } from '../utils/googleCalendar';
+import { wishlistService } from '../services/wishlist.service';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
@@ -72,9 +73,11 @@ export const Dashboard = () => {
     setEditBirthday(null);
   };
 
-  const handleAddToCalendar = (birthday: Birthday) => {
+  const handleAddToCalendar = async (birthday: Birthday) => {
     try {
-      openGoogleCalendarForBirthday(birthday);
+      const wishlist = await wishlistService.getItemsForBirthday(birthday.id);
+      const language = currentTenant?.default_language || 'he';
+      openGoogleCalendarForBirthday(birthday, language, wishlist);
     } catch (error) {
       console.error('Error opening Google Calendar:', error);
       alert(t('messages.calendarError', 'לא ניתן לפתוח את Google Calendar. אנא נסה שנית.'));
