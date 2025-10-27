@@ -28,7 +28,7 @@ export const BirthdayForm = ({
   const createBirthday = useCreateBirthday();
   const updateBirthday = useUpdateBirthday();
   const checkDuplicates = useCheckDuplicates();
-  const { data: allGroups = [] } = useGroups();
+  const { data: allGroups = [], refetch: refetchGroups } = useGroups();
   const { toasts, hideToast, success: showSuccess, error: showError } = useToast();
 
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -59,6 +59,10 @@ export const BirthdayForm = ({
 
   const rootGroups = allGroups.filter(g => g.is_root);
   const childGroups = allGroups.filter(g => !g.is_root);
+
+  console.log('BirthdayForm - All Groups:', allGroups);
+  console.log('BirthdayForm - Root Groups:', rootGroups);
+  console.log('BirthdayForm - Child Groups:', childGroups);
 
   const finalSubmit = async (data: BirthdayFormData) => {
     try {
