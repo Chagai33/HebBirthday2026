@@ -4,7 +4,9 @@ import { Birthday } from '../../types';
 import { format } from 'date-fns';
 import { he, enUS } from 'date-fns/locale';
 import { useDeleteBirthday, useArchiveBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
-import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw } from 'lucide-react';
+import { useGroups } from '../../hooks/useGroups';
+import { useGroupFilter } from '../../contexts/GroupFilterContext';
+import { Edit, Trash2, Archive, Calendar, Search, CalendarDays, RefreshCw, Filter } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 
 interface BirthdayListProps {
@@ -22,21 +24,30 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const deleteBirthday = useDeleteBirthday();
   const archiveBirthday = useArchiveBirthday();
   const refreshHebrewData = useRefreshHebrewData();
+  const { data: groups = [] } = useGroups();
+  const { selectedGroupIds, toggleGroupFilter, clearGroupFilters } = useGroupFilter();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showFutureModal, setShowFutureModal] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
+  const [showGroupFilter, setShowGroupFilter] = useState(false);
 
   const locale = i18n.language === 'he' ? he : enUS;
 
   const filteredAndSortedBirthdays = useMemo(() => {
     let filtered = birthdays;
 
+    if (selectedGroupIds.length > 0) {
+      filtered = filtered.filter((b) =>
+        b.group_id ? selectedGroupIds.includes(b.group_id) : false
+      );
+    }
+
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
-      filtered = birthdays.filter(
+      filtered = filtered.filter(
         (b) =>
           b.first_name.toLowerCase().includes(search) ||
           b.last_name.toLowerCase().includes(search)
@@ -67,7 +78,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
     });
 
     return sorted;
-  }, [birthdays, searchTerm, sortBy]);
+  }, [birthdays, searchTerm, sortBy, selectedGroupIds]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete', 'Are you sure?'))) {
@@ -123,6 +134,23 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           />
         </div>
 
+        <button
+          onClick={() => setShowGroupFilter(!showGroupFilter)}
+          className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            selectedGroupIds.length > 0
+              ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <Filter className="w-4 h-4" />
+          {t('groups.filterByGroup')}
+          {selectedGroupIds.length > 0 && (
+            <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
+              {selectedGroupIds.length}
+            </span>
+          )}
+        </button>
+
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as any)}
@@ -133,6 +161,46 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           <option value="date">{t('common.sortByDate', 'Sort by Date')}</option>
         </select>
       </div>
+
+      {showGroupFilter && groups.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900">{t('groups.filterByGroup')}</h3>
+            {selectedGroupIds.length > 0 && (
+              <button
+                onClick={clearGroupFilters}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {t('common.clear', 'Clear')}
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => toggleGroupFilter(group.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                  selectedGroupIds.includes(group.id)
+                    ? 'ring-2 ring-offset-1'
+                    : 'opacity-70 hover:opacity-100'
+                }`}
+                style={{
+                  backgroundColor: selectedGroupIds.includes(group.id) ? group.color : group.color + '40',
+                  color: selectedGroupIds.includes(group.id) ? 'white' : group.color,
+                  ringColor: group.color,
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: selectedGroupIds.includes(group.id) ? 'white' : group.color }}
+                />
+                {group.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {selectedIds.size > 0 && onAddToCalendar && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
@@ -201,19 +269,39 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                   </td>
                 </tr>
               ) : (
-                filteredAndSortedBirthdays.map((birthday) => (
-                  <tr key={birthday.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(birthday.id)}
-                        onChange={() => toggleSelect(birthday.id)}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {birthday.first_name}
-                    </td>
+                filteredAndSortedBirthdays.map((birthday) => {
+                  const birthdayGroup = birthday.group_id
+                    ? groups.find((g) => g.id === birthday.group_id)
+                    : null;
+
+                  return (
+                    <tr
+                      key={birthday.id}
+                      className="hover:bg-gray-50 transition-colors"
+                      style={{
+                        borderLeft: birthdayGroup ? `4px solid ${birthdayGroup.color}` : undefined,
+                      }}
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(birthday.id)}
+                          onChange={() => toggleSelect(birthday.id)}
+                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {birthdayGroup && (
+                            <div
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: birthdayGroup.color }}
+                              title={birthdayGroup.name}
+                            />
+                          )}
+                          <span className="text-sm text-gray-900">{birthday.first_name}</span>
+                        </div>
+                      </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {birthday.last_name}
                     </td>
@@ -288,7 +376,8 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>

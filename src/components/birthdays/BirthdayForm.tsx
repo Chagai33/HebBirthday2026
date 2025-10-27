@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { BirthdayFormData, Gender, Birthday } from '../../types';
 import { useCreateBirthday, useUpdateBirthday, useCheckDuplicates } from '../../hooks/useBirthdays';
+import { useGroups } from '../../hooks/useGroups';
 import { DuplicateVerificationModal } from '../modals/DuplicateVerificationModal';
 import { SunsetVerificationModal } from '../modals/SunsetVerificationModal';
 import { GenderVerificationModal } from '../modals/GenderVerificationModal';
@@ -12,17 +13,20 @@ interface BirthdayFormProps {
   onClose: () => void;
   onSuccess: () => void;
   editBirthday?: Birthday | null;
+  defaultGroupId?: string;
 }
 
 export const BirthdayForm = ({
   onClose,
   onSuccess,
   editBirthday,
+  defaultGroupId,
 }: BirthdayFormProps) => {
   const { t } = useTranslation();
   const createBirthday = useCreateBirthday();
   const updateBirthday = useUpdateBirthday();
   const checkDuplicates = useCheckDuplicates();
+  const { data: groups = [] } = useGroups();
 
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showSunsetModal, setShowSunsetModal] = useState(false);
@@ -42,9 +46,12 @@ export const BirthdayForm = ({
           birthDateGregorian: new Date(editBirthday.birth_date_gregorian),
           afterSunset: editBirthday.after_sunset,
           gender: editBirthday.gender,
+          groupId: editBirthday.group_id,
           notes: editBirthday.notes,
         }
-      : {},
+      : {
+          groupId: defaultGroupId,
+        },
   });
 
   const finalSubmit = async (data: BirthdayFormData) => {
@@ -225,6 +232,23 @@ export const BirthdayForm = ({
                   </span>
                 </label>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('birthday.group')}
+              </label>
+              <select
+                {...register('groupId')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">{t('birthday.noGroup')}</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

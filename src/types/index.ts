@@ -2,6 +2,10 @@ export type Gender = 'male' | 'female' | 'other';
 
 export type UserRole = 'owner' | 'admin' | 'member';
 
+export type GroupType = 'family' | 'friends' | 'work' | 'other' | 'custom';
+
+export type WishlistPriority = 'high' | 'medium' | 'low';
+
 export interface Tenant {
   id: string;
   name: string;
@@ -30,9 +34,21 @@ export interface AppUser {
   updated_at: string;
 }
 
+export interface Group {
+  id: string;
+  tenant_id: string;
+  name: string;
+  type: GroupType;
+  color: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
 export interface Birthday {
   id: string;
   tenant_id: string;
+  group_id?: string;
   first_name: string;
   last_name: string;
   birth_date_gregorian: string;
@@ -49,12 +65,24 @@ export interface Birthday {
   updated_by: string;
 }
 
+export interface WishlistItem {
+  id: string;
+  birthday_id: string;
+  tenant_id: string;
+  item_name: string;
+  description?: string;
+  priority: WishlistPriority;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BirthdayFormData {
   firstName: string;
   lastName: string;
   birthDateGregorian: Date;
   afterSunset?: boolean;
   gender?: Gender;
+  groupId?: string;
   notes?: string;
 }
 
@@ -97,4 +125,12 @@ export interface DashboardStats {
   upcomingThisWeek: number;
   maleCount: number;
   femaleCount: number;
+  groupCounts?: Record<string, number>;
+}
+
+export interface BirthdayFilter {
+  searchTerm?: string;
+  groupIds?: string[];
+  gender?: Gender;
+  sortBy?: 'name' | 'date' | 'upcoming';
 }

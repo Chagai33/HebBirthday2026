@@ -23,6 +23,7 @@ export const birthdayService = {
   ): Promise<string> {
     const birthdayRef = await addDoc(collection(db, 'birthdays'), {
       tenant_id: tenantId,
+      group_id: data.groupId || null,
       first_name: data.firstName,
       last_name: data.lastName,
       birth_date_gregorian: data.birthDateGregorian.toISOString().split('T')[0],
@@ -62,6 +63,7 @@ export const birthdayService = {
     }
     if (data.afterSunset !== undefined) updateData.after_sunset = data.afterSunset;
     if (data.gender !== undefined) updateData.gender = data.gender;
+    if (data.groupId !== undefined) updateData.group_id = data.groupId || null;
     if (data.notes !== undefined) updateData.notes = data.notes;
 
     await updateDoc(doc(db, 'birthdays', birthdayId), updateData);
@@ -154,6 +156,7 @@ export const birthdayService = {
     return {
       id,
       tenant_id: data.tenant_id,
+      group_id: data.group_id || undefined,
       first_name: data.first_name,
       last_name: data.last_name,
       birth_date_gregorian: data.birth_date_gregorian,

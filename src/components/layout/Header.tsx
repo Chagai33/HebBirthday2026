@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { LogOut, Users, Globe, Menu, X } from 'lucide-react';
+import { LogOut, Users, Globe, Menu, X, FolderTree } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { currentTenant, userTenants, switchTenant } = useTenant();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -77,6 +78,18 @@ export const Header: React.FC = () => {
             )}
 
             <button
+              onClick={() => navigate('/groups')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                location.pathname === '/groups'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <FolderTree className="w-4 h-4" />
+              <span className="text-sm">{t('groups.manageGroups')}</span>
+            </button>
+
+            <button
               onClick={toggleLanguage}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               title={i18n.language === 'he' ? 'English' : 'עברית'}
@@ -108,6 +121,21 @@ export const Header: React.FC = () => {
                 {user.display_name || user.email}
               </div>
             )}
+
+            <button
+              onClick={() => {
+                navigate('/groups');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg ${
+                location.pathname === '/groups'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <FolderTree className="w-5 h-5" />
+              {t('groups.manageGroups')}
+            </button>
 
             <button
               onClick={toggleLanguage}
