@@ -30,13 +30,17 @@ export const birthdayCalculationsService = {
       ? new Date(birthday.next_upcoming_hebrew_birthday)
       : null;
 
+    const ageAtNextHeb = nextHeb && birthday.hebrew_year
+      ? this.calculateHebrewAgeAtDate(birthday.hebrew_year, nextHeb, currentHebrewYear)
+      : hebAge.age + 1;
+
     return {
       currentGregorianAge: gregAge.age,
       currentHebrewAge: hebAge.age,
       nextGregorianBirthday: nextGreg.date,
       ageAtNextGregorianBirthday: gregAge.age + 1,
       nextHebrewBirthday: nextHeb,
-      ageAtNextHebrewBirthday: hebAge.age + 1,
+      ageAtNextHebrewBirthday: ageAtNextHeb,
       daysUntilGregorianBirthday: nextGreg.daysUntil,
       daysUntilHebrewBirthday: nextHeb
         ? Math.ceil((nextHeb.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -156,5 +160,27 @@ export const birthdayCalculationsService = {
   calculateAgeAtDate(birthYear: number, targetDate: Date): number {
     if (!birthYear) return 0;
     return targetDate.getFullYear() - birthYear;
+  },
+
+  calculateHebrewAgeAtDate(
+    hebrewBirthYear: number,
+    targetDate: Date,
+    currentHebrewYear?: number
+  ): number {
+    if (!hebrewBirthYear) return 0;
+
+    const targetYear = targetDate.getFullYear();
+    const today = new Date();
+    const currentYear = today.getFullYear();
+
+    let hebrewYearAtTarget: number;
+    if (currentHebrewYear) {
+      const gregorianYearDiff = targetYear - currentYear;
+      hebrewYearAtTarget = currentHebrewYear + gregorianYearDiff;
+    } else {
+      hebrewYearAtTarget = hebrewBirthYear + Math.floor((targetYear - 1970) * 1.0307);
+    }
+
+    return hebrewYearAtTarget - hebrewBirthYear;
   },
 };
