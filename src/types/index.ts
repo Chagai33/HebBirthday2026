@@ -15,6 +15,8 @@ export interface Tenant {
   default_language?: 'he' | 'en';
   timezone?: string;
   default_calendar_preference?: CalendarPreference;
+  current_hebrew_year?: number;
+  hebrew_year_last_updated?: string;
   created_at: string;
   updated_at: string;
 }

@@ -3,7 +3,8 @@ import { Birthday, BirthdayCalculations } from '../types';
 export const birthdayCalculationsService = {
   calculateAll(
     birthday: Birthday,
-    referenceDate: Date = new Date()
+    referenceDate: Date = new Date(),
+    currentHebrewYear?: number
   ): BirthdayCalculations {
     const gregAge = this.calculateCurrentGregorianAge(
       birthday.gregorian_year || 0,
@@ -15,7 +16,8 @@ export const birthdayCalculationsService = {
     const hebAge = this.calculateCurrentHebrewAge(
       birthday.hebrew_year || 0,
       birthday.next_upcoming_hebrew_birthday,
-      referenceDate
+      referenceDate,
+      currentHebrewYear
     );
 
     const nextGreg = this.calculateNextGregorianBirthday(
@@ -73,22 +75,29 @@ export const birthdayCalculationsService = {
   calculateCurrentHebrewAge(
     hebrewBirthYear: number,
     nextHebrewBirthdayStr: string | null | undefined,
-    today: Date = new Date()
+    today: Date = new Date(),
+    currentHebrewYear?: number
   ): { age: number; hasBirthdayPassedThisYear: boolean } {
     if (!hebrewBirthYear || !nextHebrewBirthdayStr) {
       return { age: 0, hasBirthdayPassedThisYear: false };
     }
 
     const nextBirthday = new Date(nextHebrewBirthdayStr);
-    today.setHours(0, 0, 0, 0);
+    const todayCopy = new Date(today);
+    todayCopy.setHours(0, 0, 0, 0);
     nextBirthday.setHours(0, 0, 0, 0);
 
-    const hasPassed = nextBirthday < today;
+    const hasPassed = nextBirthday <= todayCopy;
 
-    const currentGregorianYear = today.getFullYear();
-    const approximateHebrewYear = hebrewBirthYear + Math.floor((currentGregorianYear - 1970) * 1.0307);
+    let hebrewYearToUse: number;
+    if (currentHebrewYear) {
+      hebrewYearToUse = currentHebrewYear;
+    } else {
+      const currentGregorianYear = today.getFullYear();
+      hebrewYearToUse = hebrewBirthYear + Math.floor((currentGregorianYear - 1970) * 1.0307);
+    }
 
-    let age = approximateHebrewYear - hebrewBirthYear;
+    let age = hebrewYearToUse - hebrewBirthYear;
 
     if (!hasPassed) {
       age--;

@@ -43,7 +43,11 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 
   const enrichedBirthdays = useMemo(() => {
     return birthdays.map((birthday) => {
-      const calculations = birthdayCalculationsService.calculateAll(birthday);
+      const calculations = birthdayCalculationsService.calculateAll(
+        birthday,
+        new Date(),
+        currentTenant?.current_hebrew_year
+      );
       const group = groups.find((g) => g.id === birthday.group_id);
       const effectivePreference = currentTenant
         ? calendarPreferenceService.resolvePreference(birthday, group, currentTenant)
