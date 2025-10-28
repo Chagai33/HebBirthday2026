@@ -1,0 +1,31 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "yes": "Yes",
+    "no": "No",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
+  },
+  "messages": {
+    "birthdayAdded": "Birthday added successfully",
+    "birthdayUpdated": "Birthday updated successfully",
+    "tenantUpdated": "Tenant updated successfully"
+  },
+  "settings": {
+    "note1": "This setting applies to all groups in this tenant by default",
+    "note2": "Groups can override this with their own preference",
+    "note3": "Individual records can override group preferences"
+  }
+}

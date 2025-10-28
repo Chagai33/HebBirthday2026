@@ -48,6 +48,7 @@ export const BirthdayForm = ({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<BirthdayFormData>({
     defaultValues: editBirthday
@@ -58,12 +59,16 @@ export const BirthdayForm = ({
           afterSunset: editBirthday.after_sunset,
           gender: editBirthday.gender,
           groupId: editBirthday.group_id,
+          calendarPreferenceOverride: editBirthday.calendar_preference_override || undefined,
           notes: editBirthday.notes,
         }
       : {
           groupId: defaultGroupId || '',
         },
   });
+
+  const selectedGroupId = watch('groupId');
+  const selectedGroup = allGroups.find(g => g.id === selectedGroupId);
 
   const rootGroups = allGroups.filter(g => g.is_root);
   const childGroups = allGroups.filter(g => !g.is_root);
@@ -329,6 +334,31 @@ export const BirthdayForm = ({
                     {t('birthday.afterSunset')}
                   </span>
                 </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('birthday.calendarPreference')}
+              </label>
+              <div className="space-y-2">
+                {selectedGroup && selectedGroup.calendar_preference && (
+                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    {t('birthday.groupPreference', 'Group preference')}: <span className="font-semibold">{t(`birthday.${selectedGroup.calendar_preference}`)}</span>
+                  </div>
+                )}
+                <select
+                  {...register('calendarPreferenceOverride')}
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">{t('birthday.useGroupDefault', 'Use group default')}</option>
+                  <option value="gregorian">{t('birthday.gregorianOnly')}</option>
+                  <option value="hebrew">{t('birthday.hebrewOnly')}</option>
+                  <option value="both">{t('birthday.both')}</option>
+                </select>
+                <p className="text-xs text-gray-500">
+                  {t('birthday.preferenceExplanation', 'This setting overrides the group preference for this person only')}
+                </p>
               </div>
             </div>
 

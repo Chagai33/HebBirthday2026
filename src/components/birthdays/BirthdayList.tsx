@@ -6,9 +6,12 @@ import { he, enUS } from 'date-fns/locale';
 import { useDeleteBirthday, useRefreshHebrewData } from '../../hooks/useBirthdays';
 import { useGroups } from '../../hooks/useGroups';
 import { useGroupFilter } from '../../contexts/GroupFilterContext';
+import { useTenant } from '../../contexts/TenantContext';
 import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 import { WishlistModal } from '../modals/WishlistModal';
+import { birthdayCalculationsService } from '../../services/birthdayCalculations.service';
+import { calendarPreferenceService } from '../../services/calendarPreference.service';
 
 interface BirthdayListProps {
   birthdays: Birthday[];
@@ -25,6 +28,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const deleteBirthday = useDeleteBirthday();
   const refreshHebrewData = useRefreshHebrewData();
   const { data: groups = [] } = useGroups();
+  const { currentTenant } = useTenant();
   const { selectedGroupIds, toggleGroupFilter, clearGroupFilters } = useGroupFilter();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,8 +41,25 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 
   const locale = i18n.language === 'he' ? he : enUS;
 
+  const enrichedBirthdays = useMemo(() => {
+    return birthdays.map((birthday) => {
+      const calculations = birthdayCalculationsService.calculateAll(birthday);
+      const group = groups.find((g) => g.id === birthday.group_id);
+      const effectivePreference = currentTenant
+        ? calendarPreferenceService.resolvePreference(birthday, group, currentTenant)
+        : 'both';
+
+      return {
+        ...birthday,
+        calculations,
+        effectivePreference,
+        group,
+      };
+    });
+  }, [birthdays, groups, currentTenant]);
+
   const filteredAndSortedBirthdays = useMemo(() => {
-    let filtered = birthdays;
+    let filtered = enrichedBirthdays;
 
     if (selectedGroupIds.length > 0) {
       filtered = filtered.filter((b) => {
@@ -67,22 +88,22 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         case 'date':
           return new Date(a.birth_date_gregorian).getTime() - new Date(b.birth_date_gregorian).getTime();
         case 'upcoming':
-          if (!a.next_upcoming_hebrew_birthday && !b.next_upcoming_hebrew_birthday) {
-            return 0;
-          }
-          if (!a.next_upcoming_hebrew_birthday) return 1;
-          if (!b.next_upcoming_hebrew_birthday) return -1;
-          return (
-            new Date(a.next_upcoming_hebrew_birthday).getTime() -
-            new Date(b.next_upcoming_hebrew_birthday).getTime()
+          const aNext = calendarPreferenceService.getNextRelevantBirthday(
+            a.calculations,
+            a.effectivePreference
           );
+          const bNext = calendarPreferenceService.getNextRelevantBirthday(
+            b.calculations,
+            b.effectivePreference
+          );
+          return aNext.getTime() - bNext.getTime();
         default:
           return 0;
       }
     });
 
     return sorted;
-  }, [birthdays, searchTerm, sortBy, selectedGroupIds]);
+  }, [enrichedBirthdays, searchTerm, sortBy, selectedGroupIds]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete', 'Are you sure?'))) {
@@ -260,7 +281,13 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                   {t('birthday.birthDate')}
                 </th>
                 <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
-                  {t('birthday.hebrewDate')}
+                  {t('birthday.currentGregorianAge')}
+                </th>
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                  {t('birthday.currentHebrewAge')}
+                </th>
+                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                  {t('birthday.nextGregorianBirthday')}
                 </th>
                 <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
                   {t('birthday.nextHebrewBirthday')}
@@ -273,7 +300,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
             <tbody className="divide-y divide-gray-200">
               {filteredAndSortedBirthdays.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                     {searchTerm
                       ? t('common.noResults', 'No results found')
                       : t('birthday.noBirthdays', 'No birthdays yet')}
@@ -281,16 +308,15 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                 </tr>
               ) : (
                 filteredAndSortedBirthdays.map((birthday) => {
-                  const birthdayGroup = birthday.group_id
-                    ? groups.find((g) => g.id === birthday.group_id)
-                    : null;
+                  const showGregorian = calendarPreferenceService.shouldShowGregorian(birthday.effectivePreference);
+                  const showHebrew = calendarPreferenceService.shouldShowHebrew(birthday.effectivePreference);
 
                   return (
                     <tr
                       key={birthday.id}
                       className="hover:bg-blue-50 transition-all group"
                       style={{
-                        borderRight: birthdayGroup ? `4px solid ${birthdayGroup.color}` : undefined,
+                        borderRight: birthday.group ? `4px solid ${birthday.group.color}` : undefined,
                       }}
                     >
                       <td className="px-6 py-4">
@@ -303,15 +329,15 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {birthdayGroup ? (
+                          {birthday.group ? (
                             <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ backgroundColor: `${birthdayGroup.color}20` }}
-                              title={birthdayGroup.name}
+                              style={{ backgroundColor: `${birthday.group.color}20` }}
+                              title={birthday.group.name}
                             >
                               <div
                                 className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: birthdayGroup.color }}
+                                style={{ backgroundColor: birthday.group.color }}
                               />
                             </div>
                           ) : (
@@ -329,31 +355,70 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       {birthday.last_name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy', {
-                        locale,
-                      })}
+                      <div className="flex flex-col gap-1">
+                        <span>{format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy', { locale })}</span>
+                        {birthday.birth_date_hebrew_string && (
+                          <span className="text-xs text-gray-500">{birthday.birth_date_hebrew_string}</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                      {birthday.birth_date_hebrew_string || '-'}
+                    <td className="px-6 py-4 text-sm font-semibold">
+                      {showGregorian ? (
+                        <span className="text-blue-600">{birthday.calculations.currentGregorianAge}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold">
+                      {showHebrew ? (
+                        <span className="text-purple-600">{birthday.calculations.currentHebrewAge}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {birthday.next_upcoming_hebrew_birthday ? (
+                      {showGregorian ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">
+                            {format(birthday.calculations.nextGregorianBirthday, 'dd/MM/yyyy', { locale })}
+                          </span>
+                          <span className="text-xs text-blue-600">
+                            {t('birthday.ageAtNextGregorian')}: {birthday.calculations.ageAtNextGregorianBirthday}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({birthday.calculations.daysUntilGregorianBirthday} {t('birthday.days', 'days')})
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {showHebrew && birthday.calculations.nextHebrewBirthday ? (
                         <button
                           onClick={() => {
                             setSelectedBirthday(birthday);
                             setShowFutureModal(true);
                           }}
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                          className="flex flex-col gap-1 text-start hover:bg-purple-50 p-2 rounded transition-colors"
                         >
-                          <CalendarDays className="w-4 h-4" />
-                          {format(
-                            new Date(birthday.next_upcoming_hebrew_birthday),
-                            'dd/MM/yyyy',
-                            { locale }
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4 text-purple-600" />
+                            <span className="font-medium">
+                              {format(birthday.calculations.nextHebrewBirthday, 'dd/MM/yyyy', { locale })}
+                            </span>
+                          </div>
+                          <span className="text-xs text-purple-600">
+                            {t('birthday.ageAtNextHebrew')}: {birthday.calculations.ageAtNextHebrewBirthday}
+                          </span>
+                          {birthday.calculations.daysUntilHebrewBirthday !== null && (
+                            <span className="text-xs text-gray-500">
+                              ({birthday.calculations.daysUntilHebrewBirthday} {t('birthday.days', 'days')})
+                            </span>
                           )}
                         </button>
                       ) : (
-                        '-'
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">

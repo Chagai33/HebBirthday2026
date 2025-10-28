@@ -75,6 +75,10 @@
     "hebrewOnly": "Hebrew Only",
     "both": "Both",
     "overridePreference": "Override Group Preference",
+    "groupPreference": "Group preference",
+    "useGroupDefault": "Use group default",
+    "preferenceExplanation": "This setting overrides the group preference for this person only",
+    "days": "days",
     "notes": "Notes",
     "archived": "Archived",
     "upcomingBirthdays": "Upcoming Birthdays",
@@ -163,5 +167,10 @@
     "accountLinked": "Account linked successfully",
     "signInSuccess": "Signed in successfully",
     "signOutSuccess": "Signed out successfully"
+  },
+  "settings": {
+    "note1": "This setting applies to all groups in this tenant by default",
+    "note2": "Groups can override this with their own preference",
+    "note3": "Individual records can override group preferences"
   }
 }
