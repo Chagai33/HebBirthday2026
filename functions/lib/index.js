@@ -126,7 +126,7 @@ async function fetchNextHebrewBirthdays(startHebrewYear, hebrewMonth, hebrewDay,
                 date.setHours(0, 0, 0, 0);
                 functions.logger.log(`Year ${yearToFetch} -> ${date.toISOString().split('T')[0]} (${date >= today ? 'FUTURE' : 'PAST'})`);
                 if (date >= today) {
-                    return date;
+                    return { gregorianDate: date, hebrewYear: yearToFetch };
                 }
             }
             return null;
@@ -139,7 +139,7 @@ async function fetchNextHebrewBirthdays(startHebrewYear, hebrewMonth, hebrewDay,
     const results = await Promise.all(fetchPromises);
     futureDates.push(...results.filter((date) => date !== null));
     functions.logger.log(`Total future dates found: ${futureDates.length}`);
-    return futureDates.sort((a, b) => a.getTime() - b.getTime());
+    return futureDates.sort((a, b) => a.gregorianDate.getTime() - b.gregorianDate.getTime());
 }
 exports.onBirthdayWrite = functions.firestore
     .document('birthdays/{birthdayId}')
@@ -208,12 +208,18 @@ exports.onBirthdayWrite = functions.firestore
         };
         if (futureDates.length > 0) {
             const nextDate = futureDates[0];
-            updateData.next_upcoming_hebrew_birthday = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
-            updateData.future_hebrew_birthdays = futureDates.map((date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`);
+            const gregorianDate = nextDate.gregorianDate;
+            updateData.next_upcoming_hebrew_birthday = `${gregorianDate.getFullYear()}-${String(gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(gregorianDate.getDate()).padStart(2, '0')}`;
+            updateData.next_upcoming_hebrew_year = nextDate.hebrewYear;
+            updateData.future_hebrew_birthdays = futureDates.map((item) => ({
+                gregorian: `${item.gregorianDate.getFullYear()}-${String(item.gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(item.gregorianDate.getDate()).padStart(2, '0')}`,
+                hebrewYear: item.hebrewYear
+            }));
         }
         else {
             functions.logger.warn('No future dates found, setting empty array');
             updateData.future_hebrew_birthdays = [];
+            updateData.next_upcoming_hebrew_year = null;
         }
         const docSnapshot = await change.after.ref.get();
         if (!docSnapshot.exists) {
@@ -294,8 +300,13 @@ exports.refreshBirthdayHebrewData = functions.https.onCall(async (data, context)
         };
         if (futureDates.length > 0) {
             const nextDate = futureDates[0];
-            updateData.next_upcoming_hebrew_birthday = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
-            updateData.future_hebrew_birthdays = futureDates.map((date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`);
+            const gregorianDate = nextDate.gregorianDate;
+            updateData.next_upcoming_hebrew_birthday = `${gregorianDate.getFullYear()}-${String(gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(gregorianDate.getDate()).padStart(2, '0')}`;
+            updateData.next_upcoming_hebrew_year = nextDate.hebrewYear;
+            updateData.future_hebrew_birthdays = futureDates.map((item) => ({
+                gregorian: `${item.gregorianDate.getFullYear()}-${String(item.gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(item.gregorianDate.getDate()).padStart(2, '0')}`,
+                hebrewYear: item.hebrewYear
+            }));
         }
         await birthdayRef.update(updateData);
         functions.logger.log(`Successfully refreshed Hebrew dates for birthday ${birthdayId}`);
@@ -324,10 +335,17 @@ exports.updateNextBirthdayScheduled = functions.pubsub
             const nextBirthday = data.next_upcoming_hebrew_birthday;
             if (!nextBirthday || nextBirthday < nowStr) {
                 const futureDates = data.future_hebrew_birthdays || [];
-                const upcomingDates = futureDates.filter((dateStr) => dateStr >= nowStr);
+                const upcomingDates = futureDates.filter((item) => {
+                    const dateStr = typeof item === 'string' ? item : item.gregorian;
+                    return dateStr >= nowStr;
+                });
                 if (upcomingDates.length > 0) {
+                    const nextItem = upcomingDates[0];
+                    const nextGregorian = typeof nextItem === 'string' ? nextItem : nextItem.gregorian;
+                    const nextHebrewYear = typeof nextItem === 'string' ? null : nextItem.hebrewYear;
                     batch.update(doc.ref, {
-                        next_upcoming_hebrew_birthday: upcomingDates[0],
+                        next_upcoming_hebrew_birthday: nextGregorian,
+                        next_upcoming_hebrew_year: nextHebrewYear,
                         updated_at: admin.firestore.FieldValue.serverTimestamp(),
                     });
                     updateCount++;
@@ -338,12 +356,18 @@ exports.updateNextBirthdayScheduled = functions.pubsub
                         const hebrewMonth = data.birth_date_hebrew_month;
                         const hebrewDay = data.birth_date_hebrew_day;
                         if (hebrewYear && hebrewMonth && hebrewDay) {
-                            const newFutureDates = await fetchNextHebrewBirthdays(hebrewYear, hebrewMonth, hebrewDay, 10);
+                            const currentHebrewYear = await getCurrentHebrewYear();
+                            const newFutureDates = await fetchNextHebrewBirthdays(currentHebrewYear, hebrewMonth, hebrewDay, 10);
                             if (newFutureDates.length > 0) {
                                 const nextDate = newFutureDates[0];
+                                const gregorianDate = nextDate.gregorianDate;
                                 batch.update(doc.ref, {
-                                    next_upcoming_hebrew_birthday: `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`,
-                                    future_hebrew_birthdays: newFutureDates.map((date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`),
+                                    next_upcoming_hebrew_birthday: `${gregorianDate.getFullYear()}-${String(gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(gregorianDate.getDate()).padStart(2, '0')}`,
+                                    next_upcoming_hebrew_year: nextDate.hebrewYear,
+                                    future_hebrew_birthdays: newFutureDates.map((item) => ({
+                                        gregorian: `${item.gregorianDate.getFullYear()}-${String(item.gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(item.gregorianDate.getDate()).padStart(2, '0')}`,
+                                        hebrewYear: item.hebrewYear
+                                    })),
                                     updated_at: admin.firestore.FieldValue.serverTimestamp(),
                                 });
                                 updateCount++;

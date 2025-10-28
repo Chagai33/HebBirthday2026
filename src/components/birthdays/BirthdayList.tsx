@@ -495,6 +495,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         onClose={() => setShowFutureModal(false)}
         name={selectedBirthday ? `${selectedBirthday.first_name} ${selectedBirthday.last_name}` : ''}
         futureDates={selectedBirthday?.future_hebrew_birthdays || []}
+        birthHebrewYear={selectedBirthday?.hebrew_year}
       />
 
       {selectedBirthday && (

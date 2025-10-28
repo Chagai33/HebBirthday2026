@@ -54,6 +54,11 @@ export interface Group {
   created_by: string;
 }
 
+export interface HebrewBirthdayDate {
+  gregorian: string;
+  hebrewYear: number;
+}
+
 export interface Birthday {
   id: string;
   tenant_id: string;
@@ -65,7 +70,8 @@ export interface Birthday {
   gender?: Gender;
   birth_date_hebrew_string?: string;
   next_upcoming_hebrew_birthday?: string;
-  future_hebrew_birthdays?: string[];
+  next_upcoming_hebrew_year?: number;
+  future_hebrew_birthdays?: (string | HebrewBirthdayDate)[];
   gregorian_year?: number;
   gregorian_month?: number;
   gregorian_day?: number;

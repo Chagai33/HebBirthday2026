@@ -30,9 +30,11 @@ export const birthdayCalculationsService = {
       ? new Date(birthday.next_upcoming_hebrew_birthday)
       : null;
 
-    const ageAtNextHeb = nextHeb && birthday.hebrew_year
-      ? this.calculateHebrewAgeAtDate(birthday.hebrew_year, nextHeb, currentHebrewYear)
-      : hebAge.age + 1;
+    const ageAtNextHeb = nextHeb && birthday.hebrew_year && birthday.next_upcoming_hebrew_year
+      ? birthday.next_upcoming_hebrew_year - birthday.hebrew_year
+      : (nextHeb && birthday.hebrew_year
+        ? this.calculateHebrewAgeAtDate(birthday.hebrew_year, nextHeb, currentHebrewYear)
+        : hebAge.age + 1);
 
     return {
       currentGregorianAge: gregAge.age,

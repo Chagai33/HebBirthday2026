@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { X, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { he, enUS } from 'date-fns/locale';
+import { HebrewBirthdayDate } from '../../types';
 
 interface FutureBirthdaysModalProps {
   isOpen: boolean;
   onClose: () => void;
   name: string;
-  futureDates: string[];
+  futureDates: (string | HebrewBirthdayDate)[];
+  birthHebrewYear?: number;
 }
 
 export const FutureBirthdaysModal: React.FC<FutureBirthdaysModalProps> = ({
@@ -16,6 +18,7 @@ export const FutureBirthdaysModal: React.FC<FutureBirthdaysModalProps> = ({
   onClose,
   name,
   futureDates,
+  birthHebrewYear,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'he' ? he : enUS;
@@ -52,7 +55,9 @@ export const FutureBirthdaysModal: React.FC<FutureBirthdaysModalProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {futureDates.map((dateStr, index) => {
+            {futureDates.map((item, index) => {
+              const dateStr = typeof item === 'string' ? item : item.gregorian;
+              const hebrewYear = typeof item === 'string' ? null : item.hebrewYear;
               const date = new Date(dateStr);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
@@ -82,6 +87,11 @@ export const FutureBirthdaysModal: React.FC<FutureBirthdaysModalProps> = ({
                     <p className={`text-xs ${isPast ? 'text-gray-400' : 'text-gray-500'}`}>
                       {format(date, 'EEEE', { locale })}
                     </p>
+                    {hebrewYear && birthHebrewYear && (
+                      <p className={`text-xs font-semibold ${isPast ? 'text-purple-400' : 'text-purple-600'}`}>
+                        {t('birthday.age', 'גיל')}: {hebrewYear - birthHebrewYear}
+                      </p>
+                    )}
                   </div>
                   {index === 0 && isUpcoming && (
                     <span className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded">
