@@ -451,6 +451,45 @@ export const fixExistingBirthdays = functions.https.onRequest(async (req, res) =
   res.send('Done');
 });
 
+export const migrateExistingUsers = functions.https.onRequest(async (req, res) => {
+  try {
+    const membersSnapshot = await db.collection('tenant_members').get();
+    const updates: Promise<void>[] = [];
+
+    for (const doc of membersSnapshot.docs) {
+      const data = doc.data();
+      const userId = data.user_id;
+      const tenantId = data.tenant_id;
+      const role = data.role || 'member';
+
+      updates.push(
+        admin.auth().setCustomUserClaims(userId, {
+          tenantId: tenantId,
+          role: role
+        }).then(() => {
+          functions.logger.log(`Set custom claims for user ${userId}: tenantId=${tenantId}, role=${role}`);
+        }).catch((error) => {
+          functions.logger.error(`Failed to set custom claims for user ${userId}:`, error);
+        })
+      );
+    }
+
+    await Promise.all(updates);
+
+    res.json({
+      success: true,
+      message: `Migrated ${updates.length} users`,
+      usersProcessed: updates.length
+    });
+  } catch (error) {
+    functions.logger.error('Error in migrateExistingUsers:', error);
+    res.status(500).json({
+      success: false,
+      error: String(error)
+    });
+  }
+});
+
 export const onUserCreate = functions.auth.user().onCreate(async (user) => {
   const userId = user.uid;
   const email = user.email || '';

@@ -4,6 +4,7 @@ import { BirthdayFormData } from '../types';
 import { useTenant } from '../contexts/TenantContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { ensureTokenWithClaims } from '../utils/tokenRefresh';
 
 export const useBirthdays = (includeArchived = false) => {
   const { currentTenant } = useTenant();
@@ -50,6 +51,12 @@ export const useCreateBirthday = () => {
   return useMutation({
     mutationFn: async (data: BirthdayFormData) => {
       if (!currentTenant || !user) throw new Error('No tenant or user');
+
+      const hasValidToken = await ensureTokenWithClaims();
+      if (!hasValidToken) {
+        throw new Error('Authentication token is not ready. Please wait a moment and try again.');
+      }
+
       return await birthdayService.createBirthday(currentTenant.id, data, user.id);
     },
     onSuccess: () => {
