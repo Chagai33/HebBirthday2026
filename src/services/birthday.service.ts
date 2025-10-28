@@ -144,12 +144,14 @@ export const birthdayService = {
   },
 
   async checkDuplicates(
+    tenantId: string,
     groupId: string,
     firstName: string,
     lastName: string
   ): Promise<Birthday[]> {
     const q = query(
       collection(db, 'birthdays'),
+      where('tenant_id', '==', tenantId),
       where('group_id', '==', groupId),
       where('archived', '==', false)
     );

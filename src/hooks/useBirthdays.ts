@@ -104,6 +104,8 @@ export const useDeleteBirthday = () => {
 };
 
 export const useCheckDuplicates = () => {
+  const { currentTenant } = useTenant();
+
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -114,7 +116,9 @@ export const useCheckDuplicates = () => {
       firstName: string;
       lastName: string;
     }) => {
+      if (!currentTenant) throw new Error('No tenant');
       return await birthdayService.checkDuplicates(
+        currentTenant.id,
         groupId,
         firstName,
         lastName
