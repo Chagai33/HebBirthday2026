@@ -2,22 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isTenantMember(tenantId) {
-      return exists(/databases/$(database)/documents/tenant_members/$(request.auth.uid + '_' + tenantId));
-    }
-    
+
     function isTenantOwner(tenantId) {
       return get(/databases/$(database)/documents/tenants/$(tenantId)).data.owner_id == request.auth.uid;
-    }
-    
-    function isTenantAdmin(tenantId) {
-      let membership = get(/databases/$(database)/documents/tenant_members/$(request.auth.uid + '_' + tenantId));
-      return membership.data.role in ['owner', 'admin'];
     }
     
     match /profiles/{userId} {
@@ -28,33 +19,28 @@ service cloud.firestore {
     }
     
     match /tenants/{tenantId} {
-      allow read: if isAuthenticated() && isTenantMember(tenantId);
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.owner_id == request.auth.uid;
-      allow update: if isAuthenticated() && isTenantAdmin(tenantId);
+      allow update: if isAuthenticated() && isTenantOwner(tenantId);
       allow delete: if isAuthenticated() && isTenantOwner(tenantId);
     }
 
     match /tenant_members/{membershipId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() &&
-        (request.auth.uid == resource.data.user_id ||
-         isTenantAdmin(resource.data.tenant_id));
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.user_id;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.user_id;
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.user_id;
     }
     
     match /groups/{groupId} {
-      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
-      allow write: if isAuthenticated() && isTenantMember(request.resource.data.tenant_id);
+      allow read, write: if isAuthenticated();
     }
-    
+
     match /birthdays/{birthdayId} {
-      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
-      allow write: if isAuthenticated() && isTenantMember(request.resource.data.tenant_id);
+      allow read, write: if isAuthenticated();
     }
-    
+
     match /wishlist_items/{itemId} {
-      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
-      allow write: if isAuthenticated() && isTenantMember(request.resource.data.tenant_id);
+      allow read, write: if isAuthenticated();
     }
   }
 }
