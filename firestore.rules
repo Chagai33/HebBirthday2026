@@ -7,39 +7,71 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isTenantOwner(tenantId) {
-      return get(/databases/$(database)/documents/tenants/$(tenantId)).data.owner_id == request.auth.uid;
+    function getUserTenantId() {
+      return request.auth.token.tenantId;
     }
-    
+
+    function isTenantMember(tenantId) {
+      return isAuthenticated() && getUserTenantId() == tenantId;
+    }
+
+    function isTenantOwner(tenantId) {
+      return isAuthenticated() &&
+             getUserTenantId() == tenantId &&
+             request.auth.token.role == 'owner';
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
+    }
+
     match /profiles/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && request.auth.uid == userId;
       allow delete: if false;
     }
-    
+
     match /tenants/{tenantId} {
-      allow read: if isAuthenticated();
+      allow read: if isTenantMember(tenantId);
       allow create: if isAuthenticated() && request.resource.data.owner_id == request.auth.uid;
-      allow update: if isAuthenticated() && isTenantOwner(tenantId);
-      allow delete: if isAuthenticated() && isTenantOwner(tenantId);
+      allow update: if isTenantOwner(tenantId);
+      allow delete: if isTenantOwner(tenantId);
     }
 
     match /tenant_members/{membershipId} {
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.user_id;
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.user_id ||
+                      isTenantMember(resource.data.tenant_id));
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.user_id;
       allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.user_id;
     }
-    
+
     match /groups/{groupId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
+      allow create: if isAuthenticated() &&
+                       request.resource.data.tenant_id == getUserTenantId();
+      allow update, delete: if isAuthenticated() &&
+                               isTenantMember(resource.data.tenant_id);
     }
 
     match /birthdays/{birthdayId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
+      allow create: if isAuthenticated() &&
+                       request.resource.data.tenant_id == getUserTenantId();
+      allow update, delete: if isAuthenticated() &&
+                               isTenantMember(resource.data.tenant_id);
     }
 
     match /wishlist_items/{itemId} {
+      allow read: if isAuthenticated() && isTenantMember(resource.data.tenant_id);
+      allow create: if isAuthenticated() &&
+                       request.resource.data.tenant_id == getUserTenantId();
+      allow update, delete: if isAuthenticated() &&
+                               isTenantMember(resource.data.tenant_id);
+    }
+
+    match /rate_limits/{docId} {
       allow read, write: if isAuthenticated();
     }
   }

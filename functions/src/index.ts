@@ -438,7 +438,7 @@ export const updateNextBirthdayScheduled = functions.pubsub
 
 export const fixExistingBirthdays = functions.https.onRequest(async (req, res) => {
   const snapshot = await db.collection('birthdays').get();
-  
+
   for (const doc of snapshot.docs) {
     const data = doc.data();
     if (data.birth_date_hebrew_string && !data.next_upcoming_hebrew_birthday) {
@@ -447,6 +447,75 @@ export const fixExistingBirthdays = functions.https.onRequest(async (req, res) =
       });
     }
   }
-  
+
   res.send('Done');
+});
+
+export const onUserCreate = functions.auth.user().onCreate(async (user) => {
+  try {
+    const userId = user.uid;
+    const email = user.email || '';
+    const displayName = user.displayName || email.split('@')[0];
+
+    functions.logger.log(`New user created: ${userId}, creating tenant...`);
+
+    const tenantRef = await db.collection('tenants').add({
+      name: `${displayName}'s Organization`,
+      owner_id: userId,
+      default_language: 'he',
+      timezone: 'Asia/Jerusalem',
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const tenantId = tenantRef.id;
+    functions.logger.log(`Tenant created: ${tenantId}`);
+
+    await db.collection('tenant_members').add({
+      tenant_id: tenantId,
+      user_id: userId,
+      role: 'owner',
+      joined_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    functions.logger.log(`Tenant membership created for user ${userId}`);
+
+    const maleGroupRef = await db.collection('groups').add({
+      tenant_id: tenantId,
+      name: 'גברים',
+      name_en: 'Men',
+      is_gender_group: true,
+      gender_type: 'male',
+      parent_group_id: null,
+      created_by: userId,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const femaleGroupRef = await db.collection('groups').add({
+      tenant_id: tenantId,
+      name: 'נשים',
+      name_en: 'Women',
+      is_gender_group: true,
+      gender_type: 'female',
+      parent_group_id: null,
+      created_by: userId,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    functions.logger.log(`Root groups created: ${maleGroupRef.id}, ${femaleGroupRef.id}`);
+
+    await admin.auth().setCustomUserClaims(userId, {
+      tenantId: tenantId,
+      role: 'owner'
+    });
+
+    functions.logger.log(`Custom claims set for user ${userId}`);
+
+    return null;
+  } catch (error) {
+    functions.logger.error('Error in onUserCreate:', error);
+    throw error;
+  }
 });

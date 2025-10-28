@@ -26,6 +26,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          await firebaseUser.getIdToken(true);
+
           let currentUser = await authService.getCurrentUser();
           let retries = 0;
           const maxRetries = 5;

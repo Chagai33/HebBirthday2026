@@ -39,7 +39,8 @@ export const authService = {
 
   async signIn(email: string, password: string): Promise<void> {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await userCredential.user.getIdToken(true);
     } catch (error: any) {
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
         throw new Error('אימייל או סיסמה שגויים');
