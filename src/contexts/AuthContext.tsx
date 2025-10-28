@@ -26,11 +26,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          await firebaseUser.getIdToken(true);
+          let tokenResult = await firebaseUser.getIdTokenResult(true);
+          let retries = 0;
+          const maxRetries = 10;
+
+          while (!tokenResult.claims.tenantId && retries < maxRetries) {
+            console.warn(`Waiting for Custom Claims (${retries + 1}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            tokenResult = await firebaseUser.getIdTokenResult(true);
+            retries++;
+          }
+
+          if (!tokenResult.claims.tenantId) {
+            console.error('Custom Claims not set after multiple retries, signing out');
+            await authService.signOut();
+            setUser(null);
+            setLoading(false);
+            return;
+          }
 
           let currentUser = await authService.getCurrentUser();
-          let retries = 0;
-          const maxRetries = 5;
+          retries = 0;
 
           while (!currentUser && retries < maxRetries) {
             console.warn(`User profile not found, retrying (${retries + 1}/${maxRetries})...`);

@@ -452,14 +452,19 @@ export const fixExistingBirthdays = functions.https.onRequest(async (req, res) =
 });
 
 export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-  try {
-    const userId = user.uid;
-    const email = user.email || '';
-    const displayName = user.displayName || email.split('@')[0];
+  const userId = user.uid;
+  const email = user.email || '';
+  const displayName = user.displayName || email.split('@')[0];
 
+  try {
     functions.logger.log(`New user created: ${userId}, creating tenant...`);
 
-    const tenantRef = await db.collection('tenants').add({
+    const batch = db.batch();
+
+    const tenantRef = db.collection('tenants').doc();
+    const tenantId = tenantRef.id;
+
+    batch.set(tenantRef, {
       name: `${displayName}'s Organization`,
       owner_id: userId,
       default_language: 'he',
@@ -468,19 +473,16 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    const tenantId = tenantRef.id;
-    functions.logger.log(`Tenant created: ${tenantId}`);
-
-    await db.collection('tenant_members').add({
+    const memberRef = db.collection('tenant_members').doc();
+    batch.set(memberRef, {
       tenant_id: tenantId,
       user_id: userId,
       role: 'owner',
       joined_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    functions.logger.log(`Tenant membership created for user ${userId}`);
-
-    const maleGroupRef = await db.collection('groups').add({
+    const maleGroupRef = db.collection('groups').doc();
+    batch.set(maleGroupRef, {
       tenant_id: tenantId,
       name: 'גברים',
       name_en: 'Men',
@@ -492,7 +494,8 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    const femaleGroupRef = await db.collection('groups').add({
+    const femaleGroupRef = db.collection('groups').doc();
+    batch.set(femaleGroupRef, {
       tenant_id: tenantId,
       name: 'נשים',
       name_en: 'Women',
@@ -504,18 +507,28 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    functions.logger.log(`Root groups created: ${maleGroupRef.id}, ${femaleGroupRef.id}`);
-
     await admin.auth().setCustomUserClaims(userId, {
       tenantId: tenantId,
       role: 'owner'
     });
 
-    functions.logger.log(`Custom claims set for user ${userId}`);
+    functions.logger.log(`Custom claims set for user ${userId}, tenantId: ${tenantId}`);
+
+    await batch.commit();
+
+    functions.logger.log(`Successfully created tenant ${tenantId} with groups for user ${userId}`);
 
     return null;
   } catch (error) {
-    functions.logger.error('Error in onUserCreate:', error);
+    functions.logger.error(`Error in onUserCreate for user ${userId}:`, error);
+
+    try {
+      await admin.auth().deleteUser(userId);
+      functions.logger.log(`Rolled back: deleted user ${userId}`);
+    } catch (rollbackError) {
+      functions.logger.error(`Failed to rollback user ${userId}:`, rollbackError);
+    }
+
     throw error;
   }
 });

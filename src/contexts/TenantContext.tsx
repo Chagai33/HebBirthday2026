@@ -33,7 +33,25 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
       }
 
       try {
-        const tenants = await tenantService.getUserTenants(user.id);
+        let tenants = await tenantService.getUserTenants(user.id);
+        let retries = 0;
+        const maxRetries = 10;
+
+        while (tenants.length === 0 && retries < maxRetries) {
+          console.warn(`Waiting for tenant data (${retries + 1}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          tenants = await tenantService.getUserTenants(user.id);
+          retries++;
+        }
+
+        if (tenants.length === 0) {
+          console.error('No tenants found after multiple retries');
+          setUserTenants([]);
+          setCurrentTenant(null);
+          setLoading(false);
+          return;
+        }
+
         setUserTenants(tenants);
 
         const savedTenantId = localStorage.getItem('currentTenantId');

@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Group, GroupType } from '../types';
+import { retryFirestoreOperation } from './firestore.retry';
 
 const ROOT_GROUPS = [
   { type: 'family' as GroupType, nameHe: 'משפחה', nameEn: 'Family', color: '#3b82f6' },
@@ -23,24 +24,26 @@ const ROOT_GROUPS = [
 
 export const groupService = {
   async initializeRootGroups(tenantId: string, userId: string, language: 'he' | 'en' = 'he'): Promise<void> {
-    const existingRoots = await this.getRootGroups(tenantId);
-    if (existingRoots.length > 0) return;
+    return retryFirestoreOperation(async () => {
+      const existingRoots = await this.getRootGroups(tenantId);
+      if (existingRoots.length > 0) return;
 
-    const promises = ROOT_GROUPS.map(root =>
-      addDoc(collection(db, 'groups'), {
-        tenant_id: tenantId,
-        name: language === 'he' ? root.nameHe : root.nameEn,
-        parent_id: null,
-        is_root: true,
-        type: root.type,
-        color: root.color,
-        created_by: userId,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      })
-    );
+      const promises = ROOT_GROUPS.map(root =>
+        addDoc(collection(db, 'groups'), {
+          tenant_id: tenantId,
+          name: language === 'he' ? root.nameHe : root.nameEn,
+          parent_id: null,
+          is_root: true,
+          type: root.type,
+          color: root.color,
+          created_by: userId,
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        })
+      );
 
-    await Promise.all(promises);
+      await Promise.all(promises);
+    });
   },
 
   async createGroup(

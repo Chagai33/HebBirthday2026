@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Birthday, BirthdayFormData } from '../types';
+import { retryFirestoreOperation } from './firestore.retry';
 
 export const birthdayService = {
   async createBirthday(
@@ -21,31 +22,33 @@ export const birthdayService = {
     data: BirthdayFormData,
     userId: string
   ): Promise<string> {
-    const birthDate = data.birthDateGregorian;
-    const birthdayRef = await addDoc(collection(db, 'birthdays'), {
-      tenant_id: tenantId,
-      group_id: data.groupId,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      birth_date_gregorian: birthDate.toISOString().split('T')[0],
-      after_sunset: data.afterSunset ?? false,
-      gender: data.gender,
-      gregorian_year: birthDate.getFullYear(),
-      gregorian_month: birthDate.getMonth() + 1,
-      gregorian_day: birthDate.getDate(),
-      calendar_preference_override: data.calendarPreferenceOverride || null,
-      notes: data.notes || '',
-      archived: false,
-      created_by: userId,
-      updated_by: userId,
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp(),
-      birth_date_hebrew_string: null,
-      next_upcoming_hebrew_birthday: null,
-      future_hebrew_birthdays: [],
-    });
+    return retryFirestoreOperation(async () => {
+      const birthDate = data.birthDateGregorian;
+      const birthdayRef = await addDoc(collection(db, 'birthdays'), {
+        tenant_id: tenantId,
+        group_id: data.groupId,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        birth_date_gregorian: birthDate.toISOString().split('T')[0],
+        after_sunset: data.afterSunset ?? false,
+        gender: data.gender,
+        gregorian_year: birthDate.getFullYear(),
+        gregorian_month: birthDate.getMonth() + 1,
+        gregorian_day: birthDate.getDate(),
+        calendar_preference_override: data.calendarPreferenceOverride || null,
+        notes: data.notes || '',
+        archived: false,
+        created_by: userId,
+        updated_by: userId,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+        birth_date_hebrew_string: null,
+        next_upcoming_hebrew_birthday: null,
+        future_hebrew_birthdays: [],
+      });
 
-    return birthdayRef.id;
+      return birthdayRef.id;
+    });
   },
 
   async updateBirthday(
