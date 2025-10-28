@@ -198,6 +198,12 @@ exports.onBirthdayWrite = functions.firestore
             birth_date_hebrew_year: hebcalData.hy,
             birth_date_hebrew_month: hebcalData.hm,
             birth_date_hebrew_day: hebcalData.hd,
+            gregorian_year: birthDate.getFullYear(),
+            gregorian_month: birthDate.getMonth() + 1,
+            gregorian_day: birthDate.getDate(),
+            hebrew_year: hebcalData.hy,
+            hebrew_month: hebcalData.hm,
+            hebrew_day: hebcalData.hd,
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
         };
         if (futureDates.length > 0) {

@@ -21,14 +21,19 @@ export const birthdayService = {
     data: BirthdayFormData,
     userId: string
   ): Promise<string> {
+    const birthDate = data.birthDateGregorian;
     const birthdayRef = await addDoc(collection(db, 'birthdays'), {
       tenant_id: tenantId,
       group_id: data.groupId,
       first_name: data.firstName,
       last_name: data.lastName,
-      birth_date_gregorian: data.birthDateGregorian.toISOString().split('T')[0],
+      birth_date_gregorian: birthDate.toISOString().split('T')[0],
       after_sunset: data.afterSunset ?? false,
       gender: data.gender,
+      gregorian_year: birthDate.getFullYear(),
+      gregorian_month: birthDate.getMonth() + 1,
+      gregorian_day: birthDate.getDate(),
+      calendar_preference_override: data.calendarPreferenceOverride || null,
       notes: data.notes || '',
       archived: false,
       created_by: userId,
@@ -56,7 +61,11 @@ export const birthdayService = {
     if (data.firstName !== undefined) updateData.first_name = data.firstName;
     if (data.lastName !== undefined) updateData.last_name = data.lastName;
     if (data.birthDateGregorian !== undefined) {
-      updateData.birth_date_gregorian = data.birthDateGregorian.toISOString().split('T')[0];
+      const birthDate = data.birthDateGregorian;
+      updateData.birth_date_gregorian = birthDate.toISOString().split('T')[0];
+      updateData.gregorian_year = birthDate.getFullYear();
+      updateData.gregorian_month = birthDate.getMonth() + 1;
+      updateData.gregorian_day = birthDate.getDate();
       updateData.birth_date_hebrew_string = null;
       updateData.next_upcoming_hebrew_birthday = null;
       updateData.future_hebrew_birthdays = [];
@@ -64,6 +73,7 @@ export const birthdayService = {
     if (data.afterSunset !== undefined) updateData.after_sunset = data.afterSunset;
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.groupId !== undefined) updateData.group_id = data.groupId || null;
+    if (data.calendarPreferenceOverride !== undefined) updateData.calendar_preference_override = data.calendarPreferenceOverride;
     if (data.notes !== undefined) updateData.notes = data.notes;
 
     await updateDoc(doc(db, 'birthdays', birthdayId), updateData);
@@ -164,6 +174,13 @@ export const birthdayService = {
       birth_date_hebrew_string: data.birth_date_hebrew_string,
       next_upcoming_hebrew_birthday: data.next_upcoming_hebrew_birthday,
       future_hebrew_birthdays: data.future_hebrew_birthdays || [],
+      gregorian_year: data.gregorian_year,
+      gregorian_month: data.gregorian_month,
+      gregorian_day: data.gregorian_day,
+      hebrew_year: data.hebrew_year,
+      hebrew_month: data.hebrew_month,
+      hebrew_day: data.hebrew_day,
+      calendar_preference_override: data.calendar_preference_override || null,
       notes: data.notes || '',
       archived: data.archived ?? false,
       created_at: this.timestampToString(data.created_at),
