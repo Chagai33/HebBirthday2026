@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fixExistingBirthdays = exports.updateNextBirthdayScheduled = exports.refreshBirthdayHebrewData = exports.onBirthdayWrite = void 0;
+exports.onUserCreate = exports.migrateExistingUsers = exports.fixExistingBirthdays = exports.updateNextBirthdayScheduled = exports.refreshBirthdayHebrewData = exports.onBirthdayWrite = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
@@ -282,7 +282,9 @@ exports.refreshBirthdayHebrewData = functions.https.onCall(async (data, context)
         if (!hebcalData.hebrew) {
             throw new functions.https.HttpsError('internal', 'Failed to fetch Hebrew date');
         }
-        const futureDates = await fetchNextHebrewBirthdays(hebcalData.hy, hebcalData.hm, hebcalData.hd, 10);
+        const currentHebrewYear = await getCurrentHebrewYear();
+        functions.logger.log(`Current Hebrew year: ${currentHebrewYear}`);
+        const futureDates = await fetchNextHebrewBirthdays(currentHebrewYear, hebcalData.hm, hebcalData.hd, 10);
         const updateData = {
             birth_date_hebrew_string: hebcalData.hebrew,
             birth_date_hebrew_year: hebcalData.hy,
@@ -379,5 +381,107 @@ exports.fixExistingBirthdays = functions.https.onRequest(async (req, res) => {
         }
     }
     res.send('Done');
+});
+exports.migrateExistingUsers = functions.https.onRequest(async (req, res) => {
+    try {
+        const membersSnapshot = await db.collection('tenant_members').get();
+        const updates = [];
+        for (const doc of membersSnapshot.docs) {
+            const data = doc.data();
+            const userId = data.user_id;
+            const tenantId = data.tenant_id;
+            const role = data.role || 'member';
+            updates.push(admin.auth().setCustomUserClaims(userId, {
+                tenantId: tenantId,
+                role: role
+            }).then(() => {
+                functions.logger.log(`Set custom claims for user ${userId}: tenantId=${tenantId}, role=${role}`);
+            }).catch((error) => {
+                functions.logger.error(`Failed to set custom claims for user ${userId}:`, error);
+            }));
+        }
+        await Promise.all(updates);
+        res.json({
+            success: true,
+            message: `Migrated ${updates.length} users`,
+            usersProcessed: updates.length
+        });
+    }
+    catch (error) {
+        functions.logger.error('Error in migrateExistingUsers:', error);
+        res.status(500).json({
+            success: false,
+            error: String(error)
+        });
+    }
+});
+exports.onUserCreate = functions.auth.user().onCreate(async (user) => {
+    const userId = user.uid;
+    const email = user.email || '';
+    const displayName = user.displayName || email.split('@')[0];
+    try {
+        functions.logger.log(`New user created: ${userId}, creating tenant...`);
+        const batch = db.batch();
+        const tenantRef = db.collection('tenants').doc();
+        const tenantId = tenantRef.id;
+        batch.set(tenantRef, {
+            name: `${displayName}'s Organization`,
+            owner_id: userId,
+            default_language: 'he',
+            timezone: 'Asia/Jerusalem',
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        const memberRef = db.collection('tenant_members').doc();
+        batch.set(memberRef, {
+            tenant_id: tenantId,
+            user_id: userId,
+            role: 'owner',
+            joined_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        const maleGroupRef = db.collection('groups').doc();
+        batch.set(maleGroupRef, {
+            tenant_id: tenantId,
+            name: 'גברים',
+            name_en: 'Men',
+            is_gender_group: true,
+            gender_type: 'male',
+            parent_group_id: null,
+            created_by: userId,
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        const femaleGroupRef = db.collection('groups').doc();
+        batch.set(femaleGroupRef, {
+            tenant_id: tenantId,
+            name: 'נשים',
+            name_en: 'Women',
+            is_gender_group: true,
+            gender_type: 'female',
+            parent_group_id: null,
+            created_by: userId,
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        await admin.auth().setCustomUserClaims(userId, {
+            tenantId: tenantId,
+            role: 'owner'
+        });
+        functions.logger.log(`Custom claims set for user ${userId}, tenantId: ${tenantId}`);
+        await batch.commit();
+        functions.logger.log(`Successfully created tenant ${tenantId} with groups for user ${userId}`);
+        return null;
+    }
+    catch (error) {
+        functions.logger.error(`Error in onUserCreate for user ${userId}:`, error);
+        try {
+            await admin.auth().deleteUser(userId);
+            functions.logger.log(`Rolled back: deleted user ${userId}`);
+        }
+        catch (rollbackError) {
+            functions.logger.error(`Failed to rollback user ${userId}:`, rollbackError);
+        }
+        throw error;
+    }
 });
 //# sourceMappingURL=index.js.map

@@ -326,8 +326,11 @@ export const refreshBirthdayHebrewData = functions.https.onCall(async (data, con
       throw new functions.https.HttpsError('internal', 'Failed to fetch Hebrew date');
     }
 
+    const currentHebrewYear = await getCurrentHebrewYear();
+    functions.logger.log(`Current Hebrew year: ${currentHebrewYear}`);
+
     const futureDates = await fetchNextHebrewBirthdays(
-      hebcalData.hy,
+      currentHebrewYear,
       hebcalData.hm,
       hebcalData.hd,
       10
