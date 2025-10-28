@@ -170,6 +170,7 @@ export const birthdayCalculationsService = {
     if (!hebrewBirthYear) return 0;
 
     const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth() + 1;
     const today = new Date();
     const currentYear = today.getFullYear();
 
@@ -178,7 +179,10 @@ export const birthdayCalculationsService = {
       const gregorianYearDiff = targetYear - currentYear;
       hebrewYearAtTarget = currentHebrewYear + gregorianYearDiff;
     } else {
-      hebrewYearAtTarget = hebrewBirthYear + Math.floor((targetYear - 1970) * 1.0307);
+      hebrewYearAtTarget = targetYear + 3761;
+      if (targetMonth >= 1 && targetMonth <= 8) {
+        hebrewYearAtTarget--;
+      }
     }
 
     return hebrewYearAtTarget - hebrewBirthYear;
