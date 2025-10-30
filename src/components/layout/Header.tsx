@@ -39,7 +39,14 @@ export const Header: React.FC = () => {
             >
               {t('birthday.birthdays')}
             </button>
-
+            <a
+              href="https://www.linkedin.com/in/chagai-yechiel/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:block text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              {t('common.developedBy')} {i18n.language === 'he' ? 'חגי יחיאל' : 'Chagai Yechiel'}
+            </a>
           </div>
 
           <div className="hidden md:flex items-center gap-3">

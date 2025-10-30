@@ -32,11 +32,11 @@ export const Dashboard = () => {
   }, [allBirthdays, selectedGroupIds]);
 
   useEffect(() => {
-    if (currentTenant && user && !isLoadingGroups && rootGroups.length === 0) {
+    if (currentTenant && user && !isLoadingGroups && rootGroups.length === 0 && !initializeRootGroups.isPending) {
       console.log('Initializing root groups for tenant:', currentTenant.id);
       initializeRootGroups.mutate(currentTenant.default_language || 'he');
     }
-  }, [currentTenant, user, isLoadingGroups, rootGroups.length, initializeRootGroups]);
+  }, [currentTenant?.id, user?.id, isLoadingGroups, rootGroups.length]);
 
   const stats: DashboardStats = useMemo(() => {
     const now = new Date();

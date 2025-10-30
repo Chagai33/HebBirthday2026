@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useRootGroups, useChildGroups, useCreateGroup, useUpdateGroup, useDeleteGroup, useInitializeRootGroups } from '../../hooks/useGroups';
 import { groupService } from '../../services/group.service';
 import { Layout } from '../layout/Layout';
 import { Group } from '../../types';
-import { Plus, Edit, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit, Trash2, X, ChevronDown, ChevronUp, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Toast } from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
 import { DeleteGroupModal } from '../modals/DeleteGroupModal';
@@ -16,7 +17,8 @@ const GROUP_COLORS = [
 ];
 
 export const GroupsPanel = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { data: rootGroups = [], isLoading } = useRootGroups();
   const createGroup = useCreateGroup();
   const updateGroup = useUpdateGroup();
@@ -30,9 +32,14 @@ export const GroupsPanel = () => {
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [deletingGroup, setDeletingGroup] = useState<{ id: string; name: string } | null>(null);
   const [deleteRecordCount, setDeleteRecordCount] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    color: string;
+    calendarPreference?: 'gregorian' | 'hebrew' | 'both';
+  }>({
     name: '',
     color: GROUP_COLORS[0],
+    calendarPreference: 'both',
   });
 
   useEffect(() => {
@@ -42,10 +49,10 @@ export const GroupsPanel = () => {
   }, [rootGroups]);
 
   useEffect(() => {
-    if (rootGroups.length === 0 && !isLoading) {
+    if (rootGroups.length === 0 && !isLoading && !initializeRootGroups.isPending) {
       initializeRootGroups.mutate('he');
     }
-  }, [rootGroups.length, isLoading, initializeRootGroups]);
+  }, [rootGroups.length, isLoading]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -65,12 +72,14 @@ export const GroupsPanel = () => {
       setFormData({
         name: group.name,
         color: group.color,
+        calendarPreference: group.calendar_preference || 'both',
       });
     } else {
       setEditingGroup(null);
       setFormData({
         name: '',
         color: GROUP_COLORS[0],
+        calendarPreference: 'both',
       });
     }
     setSelectedParentId(parentId);
@@ -84,6 +93,7 @@ export const GroupsPanel = () => {
     setFormData({
       name: '',
       color: GROUP_COLORS[0],
+      calendarPreference: 'both',
     });
   };
 
@@ -103,6 +113,7 @@ export const GroupsPanel = () => {
           name: formData.name,
           parentId: selectedParentId,
           color: formData.color,
+          calendarPreference: formData.calendarPreference,
         });
         success(t('groups.groupCreated'));
       }
@@ -153,9 +164,18 @@ export const GroupsPanel = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('groups.manageGroups')}</h2>
-          <p className="text-gray-600 mt-2">{t('groups.manageDescription', 'ארגן את אנשי הקשר שלך בקבוצות')}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('groups.manageGroups')}</h2>
+            <p className="text-gray-600 mt-2">{t('groups.manageDescription', 'ארגן את אנשי הקשר שלך בקבוצות')}</p>
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+          >
+            {i18n.language === 'he' ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
+            <span className="hidden sm:inline">{t('common.back', 'חזור')}</span>
+          </button>
         </div>
 
         <div className="grid gap-4">
@@ -222,6 +242,24 @@ export const GroupsPanel = () => {
                       />
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('birthday.calendarPreference')}
+                  </label>
+                  <select
+                    value={formData.calendarPreference}
+                    onChange={(e) => setFormData({ ...formData, calendarPreference: e.target.value as 'gregorian' | 'hebrew' | 'both' })}
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="both">{t('birthday.both')}</option>
+                    <option value="gregorian">{t('birthday.gregorianOnly')}</option>
+                    <option value="hebrew">{t('birthday.hebrewOnly')}</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('groups.preferenceExplanation', 'זה ישפיע על אופן הצגת ימי ההולדת בקבוצה זו')}
+                  </p>
                 </div>
 
                 <div className="flex gap-3 justify-end pt-2">

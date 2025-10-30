@@ -64,15 +64,17 @@ export const useCreateGroup = () => {
       name,
       parentId,
       color,
+      calendarPreference,
     }: {
       name: string;
       parentId: string;
       color: string;
+      calendarPreference?: 'gregorian' | 'hebrew' | 'both';
     }) => {
       if (!currentTenant || !user) {
         throw new Error('No tenant or user found');
       }
-      return groupService.createGroup(currentTenant.id, name, parentId, color, user.id);
+      return groupService.createGroup(currentTenant.id, name, parentId, color, user.id, calendarPreference);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
@@ -90,7 +92,7 @@ export const useUpdateGroup = () => {
       data,
     }: {
       groupId: string;
-      data: { name?: string; color?: string };
+      data: { name?: string; color?: string; calendarPreference?: 'gregorian' | 'hebrew' | 'both' };
     }) => {
       return groupService.updateGroup(groupId, data);
     },

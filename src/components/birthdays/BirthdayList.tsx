@@ -297,7 +297,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                   {t('birthday.nextHebrewBirthday')}
                 </th>
                 <th className="px-6 py-4 text-end text-sm font-bold text-gray-900">
-                  {t('common.actions', 'Actions')}
+                  {t('common.actions')}
                 </th>
               </tr>
             </thead>
@@ -374,7 +374,9 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold">
-                      {showHebrew ? (
+                      {showHebrew && birthday.next_upcoming_hebrew_year && birthday.hebrew_year ? (
+                        <span className="text-purple-600">{birthday.next_upcoming_hebrew_year - birthday.hebrew_year - 1}</span>
+                      ) : showHebrew ? (
                         <span className="text-purple-600">{birthday.calculations.currentHebrewAge}</span>
                       ) : (
                         <span className="text-gray-400">-</span>

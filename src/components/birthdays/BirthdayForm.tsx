@@ -45,6 +45,14 @@ export const BirthdayForm = ({
   const [duplicates, setDuplicates] = useState<Birthday[]>([]);
   const [pendingData, setPendingData] = useState<BirthdayFormData | null>(null);
 
+  const formatDateForInput = (dateString: string): string => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const {
     register,
     handleSubmit,
@@ -246,6 +254,7 @@ export const BirthdayForm = ({
               </label>
               <input
                 type="date"
+                defaultValue={editBirthday ? formatDateForInput(editBirthday.birth_date_gregorian) : undefined}
                 {...register('birthDateGregorian', {
                   required: t('validation.required'),
                   valueAsDate: true,

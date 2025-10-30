@@ -23,26 +23,57 @@ const ROOT_GROUPS = [
 ];
 
 export const groupService = {
+  isInitializing: false,
+
   async initializeRootGroups(tenantId: string, userId: string, language: 'he' | 'en' = 'he'): Promise<void> {
+    if (this.isInitializing) {
+      console.log('Already initializing root groups, skipping...');
+      return;
+    }
+
     return retryFirestoreOperation(async () => {
       const existingRoots = await this.getRootGroups(tenantId);
-      if (existingRoots.length > 0) return;
 
-      const promises = ROOT_GROUPS.map(root =>
-        addDoc(collection(db, 'groups'), {
-          tenant_id: tenantId,
-          name: language === 'he' ? root.nameHe : root.nameEn,
-          parent_id: null,
-          is_root: true,
-          type: root.type,
-          color: root.color,
-          created_by: userId,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        })
-      );
+      if (existingRoots.length >= 3) {
+        console.log('Root groups already exist, skipping initialization');
+        return;
+      }
 
-      await Promise.all(promises);
+      if (this.isInitializing) {
+        console.log('Another initialization is in progress, skipping...');
+        return;
+      }
+
+      this.isInitializing = true;
+
+      try {
+        const existingTypes = new Set(existingRoots.map(g => g.type));
+        const groupsToCreate = ROOT_GROUPS.filter(root => !existingTypes.has(root.type));
+
+        if (groupsToCreate.length === 0) {
+          console.log('All root groups already exist');
+          return;
+        }
+
+        const promises = groupsToCreate.map(root =>
+          addDoc(collection(db, 'groups'), {
+            tenant_id: tenantId,
+            name: language === 'he' ? root.nameHe : root.nameEn,
+            parent_id: null,
+            is_root: true,
+            type: root.type,
+            color: root.color,
+            created_by: userId,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          })
+        );
+
+        await Promise.all(promises);
+        console.log('Root groups initialized successfully');
+      } finally {
+        this.isInitializing = false;
+      }
     });
   },
 
@@ -51,9 +82,10 @@ export const groupService = {
     name: string,
     parentId: string,
     color: string,
-    userId: string
+    userId: string,
+    calendarPreference?: 'gregorian' | 'hebrew' | 'both'
   ): Promise<string> {
-    const groupRef = await addDoc(collection(db, 'groups'), {
+    const groupData: any = {
       tenant_id: tenantId,
       name,
       parent_id: parentId,
@@ -62,14 +94,20 @@ export const groupService = {
       created_by: userId,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
-    });
+    };
+
+    if (calendarPreference) {
+      groupData.calendar_preference = calendarPreference;
+    }
+
+    const groupRef = await addDoc(collection(db, 'groups'), groupData);
 
     return groupRef.id;
   },
 
   async updateGroup(
     groupId: string,
-    data: { name?: string; color?: string }
+    data: { name?: string; color?: string; calendarPreference?: 'gregorian' | 'hebrew' | 'both' }
   ): Promise<void> {
     const updateData: any = {
       updated_at: serverTimestamp(),
@@ -77,6 +115,7 @@ export const groupService = {
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.color !== undefined) updateData.color = data.color;
+    if (data.calendarPreference !== undefined) updateData.calendar_preference = data.calendarPreference;
 
     await updateDoc(doc(db, 'groups', groupId), updateData);
   },

@@ -148,6 +148,17 @@ export const Register: React.FC = () => {
             {t('auth.signIn')}
           </button>
         </p>
+
+        <p className="mt-4 text-center text-xs text-gray-500">
+          <a
+            href="https://www.linkedin.com/in/chagai-yechiel/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-700 transition-colors"
+          >
+            {t('common.developedBy')} {i18n.language === 'he' ? 'חגי יחיאל' : 'Chagai Yechiel'}
+          </a>
+        </p>
       </div>
     </div>
   );

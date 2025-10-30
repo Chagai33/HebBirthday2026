@@ -16,7 +16,19 @@
     "no": "No",
     "male": "Male",
     "female": "Female",
-    "other": "Other"
+    "other": "Other",
+    "actions": "Actions",
+    "selected": "selected",
+    "clear": "Clear",
+    "confirmDelete": "Are you sure?",
+    "noResults": "No results found",
+    "sortByName": "Sort by Name",
+    "sortByDate": "Sort by Date",
+    "select": "Select",
+    "creating": "Creating...",
+    "create": "Create",
+    "developedBy": "Developed by",
+    "back": "Back"
   },
   "auth": {
     "signIn": "Sign In",
@@ -98,6 +110,7 @@
     "calendarPreference": "Calendar Preference",
     "family": "Family",
     "friends": "Friends",
+    "preferenceExplanation": "This will affect how birthdays are displayed in this group",
     "work": "Work",
     "other": "Other",
     "custom": "Custom",

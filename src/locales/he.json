@@ -16,7 +16,19 @@
     "no": "לא",
     "male": "זכר",
     "female": "נקבה",
-    "other": "אחר"
+    "other": "אחר",
+    "actions": "פעולות",
+    "selected": "נבחרו",
+    "clear": "נקה הכל",
+    "confirmDelete": "האם אתה בטוח?",
+    "noResults": "לא נמצאו תוצאות",
+    "sortByName": "מיון לפי שם",
+    "sortByDate": "מיון לפי תאריך",
+    "select": "בחר",
+    "creating": "יוצר...",
+    "create": "צור",
+    "developedBy": "פותח על ידי",
+    "back": "חזור"
   },
   "auth": {
     "signIn": "התחבר",
@@ -117,6 +129,7 @@
     "groupDeleted": "הקבוצה נמחקה בהצלחה",
     "groupCreated": "הקבוצה נוצרה בהצלחה",
     "groupUpdated": "הקבוצה עודכנה בהצלחה",
+    "preferenceExplanation": "זה ישפיע על אופן הצגת ימי ההולדת בקבוצה זו",
     "addGroupUnder": "הוסף קבוצה תחת {{category}}",
     "selectCategory": "בחר קטגוריה"
   },
