@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, LogIn } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
