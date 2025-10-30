@@ -22,7 +22,9 @@ export const wishlistService = {
     description: string,
     priority: WishlistPriority
   ): Promise<string> {
-    const itemRef = await addDoc(collection(db, 'wishlist_items'), {
+    console.log('➕ Creating wishlist item:', { birthdayId, tenantId, itemName, priority });
+
+    const itemData = {
       birthday_id: birthdayId,
       tenant_id: tenantId,
       item_name: itemName,
@@ -30,7 +32,13 @@ export const wishlistService = {
       priority,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
-    });
+    };
+
+    console.log('📝 Item data to save:', itemData);
+
+    const itemRef = await addDoc(collection(db, 'wishlist_items'), itemData);
+
+    console.log('✅ Wishlist item created with ID:', itemRef.id);
 
     return itemRef.id;
   },
@@ -55,12 +63,19 @@ export const wishlistService = {
   },
 
   async getItemsForBirthday(birthdayId: string): Promise<WishlistItem[]> {
+    console.log('🔍 Fetching wishlist items for birthday:', birthdayId);
     const q = query(
       collection(db, 'wishlist_items'),
       where('birthday_id', '==', birthdayId)
     );
 
     const snapshot = await getDocs(q);
+    console.log('📦 Found wishlist items:', snapshot.docs.length);
+
+    if (snapshot.docs.length > 0) {
+      console.log('📝 First item data:', snapshot.docs[0].data());
+    }
+
     const items = snapshot.docs.map((doc) => this.docToWishlistItem(doc.id, doc.data()));
 
     const priorityOrder = { high: 1, medium: 2, low: 3 };

@@ -4,10 +4,18 @@ import { WishlistPriority } from '../types';
 import { useTenant } from '../contexts/TenantContext';
 
 export const useWishlistItems = (birthdayId: string) => {
+  console.log('🎯 useWishlistItems called with birthdayId:', birthdayId);
   return useQuery({
     queryKey: ['wishlist', birthdayId],
-    queryFn: () => wishlistService.getItemsForBirthday(birthdayId),
+    queryFn: async () => {
+      console.log('🚀 Query function executing for:', birthdayId);
+      const result = await wishlistService.getItemsForBirthday(birthdayId);
+      console.log('✨ Query result:', result);
+      return result;
+    },
     enabled: !!birthdayId,
+    staleTime: 0,
+    gcTime: 0,
   });
 };
 
