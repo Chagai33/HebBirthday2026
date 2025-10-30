@@ -85,6 +85,7 @@
     "calendarPreference": "Calendar Preference",
     "gregorianOnly": "Gregorian Only",
     "hebrewOnly": "Hebrew Only",
+    "upcomingGregorianBirthdays": "Upcoming Gregorian Birthdays",
     "both": "Both",
     "overridePreference": "Override Group Preference",
     "groupPreference": "Group preference",

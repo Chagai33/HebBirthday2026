@@ -9,6 +9,7 @@ import { useGroupFilter } from '../../contexts/GroupFilterContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
+import { UpcomingGregorianBirthdaysModal } from '../modals/UpcomingGregorianBirthdaysModal';
 import { WishlistModal } from '../modals/WishlistModal';
 import { birthdayCalculationsService } from '../../services/birthdayCalculations.service';
 import { calendarPreferenceService } from '../../services/calendarPreference.service';
@@ -35,6 +36,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showFutureModal, setShowFutureModal] = useState(false);
+  const [showGregorianModal, setShowGregorianModal] = useState(false);
   const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
   const [showGroupFilter, setShowGroupFilter] = useState(false);
@@ -384,17 +386,26 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {showGregorian ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">
-                            {format(birthday.calculations.nextGregorianBirthday, 'dd/MM/yyyy', { locale })}
-                          </span>
+                        <button
+                          onClick={() => {
+                            setSelectedBirthday(birthday);
+                            setShowGregorianModal(true);
+                          }}
+                          className="flex flex-col gap-1 text-start hover:bg-blue-50 p-2 rounded transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium">
+                              {format(birthday.calculations.nextGregorianBirthday, 'dd/MM/yyyy', { locale })}
+                            </span>
+                          </div>
                           <span className="text-xs text-blue-600">
                             {t('birthday.ageAtNextGregorian')}: {birthday.calculations.ageAtNextGregorianBirthday}
                           </span>
                           <span className="text-xs text-gray-500">
-                            ({birthday.calculations.daysUntilGregorianBirthday} {t('birthday.days', 'days')})
+                            ({birthday.calculations.daysUntilGregorianBirthday} {t('birthday.days')})
                           </span>
-                        </div>
+                        </button>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
@@ -499,6 +510,14 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         futureDates={selectedBirthday?.future_hebrew_birthdays || []}
         birthHebrewYear={selectedBirthday?.hebrew_year}
       />
+
+      {selectedBirthday && (
+        <UpcomingGregorianBirthdaysModal
+          isOpen={showGregorianModal}
+          onClose={() => setShowGregorianModal(false)}
+          birthday={selectedBirthday}
+        />
+      )}
 
       {selectedBirthday && (
         <WishlistModal
