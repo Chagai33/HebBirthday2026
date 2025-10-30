@@ -16,20 +16,32 @@ export function exportBirthdaysToCSV(birthdays: Birthday[], filename: string = '
     'Calendar Preference'
   ];
 
-  const rows = birthdays.map(birthday => [
-    birthday.first_name || '',
-    birthday.last_name || '',
-    birthday.birth_date_gregorian || '',
-    birthday.after_sunset ? 'Yes' : 'No',
-    birthday.gender || '',
-    birthday.hebrew_date || '',
-    birthday.hebrew_year?.toString() || '',
-    birthday.next_upcoming_hebrew_birthday || '',
-    birthday.calculations?.nextGregorianBirthday?.toISOString().split('T')[0] || '',
-    birthday.group_id || '',
-    (birthday.notes || '').replace(/"/g, '""'),
-    birthday.calendar_preference_override || ''
-  ]);
+  const rows = birthdays.map(birthday => {
+    let nextGregorianStr = '';
+    if (birthday.calculations?.nextGregorianBirthday) {
+      const date = birthday.calculations.nextGregorianBirthday;
+      if (date instanceof Date) {
+        nextGregorianStr = date.toISOString().split('T')[0];
+      } else if (typeof date === 'string') {
+        nextGregorianStr = date.split('T')[0];
+      }
+    }
+
+    return [
+      birthday.first_name || '',
+      birthday.last_name || '',
+      birthday.birth_date_gregorian || '',
+      birthday.after_sunset ? 'Yes' : 'No',
+      birthday.gender || '',
+      birthday.birth_date_hebrew_string || '',
+      birthday.hebrew_year?.toString() || '',
+      birthday.next_upcoming_hebrew_birthday || '',
+      nextGregorianStr,
+      birthday.group_id || '',
+      (birthday.notes || '').replace(/"/g, '""'),
+      birthday.calendar_preference_override || ''
+    ];
+  });
 
   const csvContent = [
     headers.join(','),
