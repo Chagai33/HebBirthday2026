@@ -75,7 +75,13 @@ export const Dashboard = () => {
 
   const handleAddToCalendar = async (birthday: Birthday) => {
     try {
-      const wishlist = await wishlistService.getItemsForBirthday(birthday.id);
+      let wishlist: any[] = [];
+      try {
+        wishlist = await wishlistService.getItemsForBirthday(birthday.id);
+      } catch (wishlistError) {
+        console.warn('Could not load wishlist, continuing without it:', wishlistError);
+      }
+
       const language = currentTenant?.default_language || 'he';
       openGoogleCalendarForBirthday(birthday, language, wishlist);
     } catch (error) {

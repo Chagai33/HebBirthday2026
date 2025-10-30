@@ -256,7 +256,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
               <button
                 onClick={() => {
                   const selectedBirthdays = birthdays.filter(b => selectedIds.has(b.id));
-                  exportBirthdaysToCSV(selectedBirthdays, `birthdays-${new Date().toISOString().split('T')[0]}.csv`);
+                  exportBirthdaysToCSV(selectedBirthdays, `birthdays-${new Date().toISOString().split('T')[0]}.csv`, i18n.language);
                 }}
                 className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
               >

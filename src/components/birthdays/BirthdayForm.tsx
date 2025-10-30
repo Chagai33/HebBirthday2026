@@ -63,7 +63,7 @@ export const BirthdayForm = ({
       ? {
           firstName: editBirthday.first_name,
           lastName: editBirthday.last_name,
-          birthDateGregorian: new Date(editBirthday.birth_date_gregorian),
+          birthDateGregorian: formatDateForInput(editBirthday.birth_date_gregorian) as any,
           afterSunset: editBirthday.after_sunset,
           gender: editBirthday.gender,
           groupId: editBirthday.group_id,

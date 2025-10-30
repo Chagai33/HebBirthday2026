@@ -1,7 +1,20 @@
 import { Birthday } from '../types';
 
-export function exportBirthdaysToCSV(birthdays: Birthday[], filename: string = 'birthdays.csv') {
-  const headers = [
+export function exportBirthdaysToCSV(birthdays: Birthday[], filename: string = 'birthdays.csv', language: string = 'en') {
+  const headers = language === 'he' ? [
+    'שם פרטי',
+    'שם משפחה',
+    'תאריך לידה לועזי',
+    'אחרי שקיעה',
+    'מגדר',
+    'תאריך לידה עברי',
+    'שנה עברית',
+    'יום הולדת עברי הבא',
+    'יום הולדת לועזי הבא',
+    'מזהה קבוצה',
+    'הערות',
+    'העדפת לוח שנה'
+  ] : [
     'First Name',
     'Last Name',
     'Birth Date (Gregorian)',
@@ -117,15 +130,15 @@ export function parseCSVFile(csvText: string): CSVBirthdayData[] {
       row[header] = value;
     });
 
-    const firstName = row['first name'] || row['firstname'] || '';
-    const lastName = row['last name'] || row['lastname'] || '';
-    const birthDate = row['birth date (gregorian)'] || row['birth date'] || row['birthdate'] || '';
+    const firstName = row['first name'] || row['firstname'] || row['שם פרטי'] || '';
+    const lastName = row['last name'] || row['lastname'] || row['שם משפחה'] || '';
+    const birthDate = row['birth date (gregorian)'] || row['birth date'] || row['birthdate'] || row['תאריך לידה לועזי'] || '';
 
     if (!firstName || !birthDate) continue;
 
-    const afterSunsetValue = (row['after sunset'] || '').toLowerCase();
-    const genderValue = (row['gender'] || '').toLowerCase();
-    const calPrefValue = (row['calendar preference'] || row['calendarpreference'] || '').toLowerCase();
+    const afterSunsetValue = (row['after sunset'] || row['אחרי שקיעה'] || '').toLowerCase();
+    const genderValue = (row['gender'] || row['מגדר'] || '').toLowerCase();
+    const calPrefValue = (row['calendar preference'] || row['calendarpreference'] || row['העדפת לוח שנה'] || '').toLowerCase();
 
     data.push({
       firstName,
