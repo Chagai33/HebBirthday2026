@@ -9,10 +9,12 @@ import { useGroupFilter } from '../contexts/GroupFilterContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRootGroups, useInitializeRootGroups } from '../hooks/useGroups';
 import { Birthday, DashboardStats } from '../types';
-import { Plus, Users, Calendar, TrendingUp, Cake } from 'lucide-react';
+import { Plus, Users, Calendar, TrendingUp, Cake, Upload } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
 import { openGoogleCalendarForBirthday } from '../utils/googleCalendar';
 import { wishlistService } from '../services/wishlist.service';
+import { parseCSVFile, CSVBirthdayData } from '../utils/csvExport';
+import { birthdayService } from '../services/birthday.service';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
@@ -25,6 +27,7 @@ export const Dashboard = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   const birthdays = useMemo(() => {
     if (selectedGroupIds.length === 0) return allBirthdays;
@@ -78,6 +81,50 @@ export const Dashboard = () => {
     } catch (error) {
       console.error('Error opening Google Calendar:', error);
       alert(t('messages.calendarError'));
+    }
+  };
+
+  const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !currentTenant || !user) return;
+
+    setIsImporting(true);
+
+    try {
+      const text = await file.text();
+      const data = parseCSVFile(text);
+
+      let imported = 0;
+      let failed = 0;
+
+      for (const item of data) {
+        try {
+          await birthdayService.createBirthday(
+            currentTenant.id,
+            item.firstName,
+            item.lastName,
+            item.birthDate,
+            item.afterSunset,
+            item.gender,
+            item.groupId,
+            item.notes,
+            user.id,
+            item.calendarPreference
+          );
+          imported++;
+        } catch (error) {
+          console.error('Failed to import:', item, error);
+          failed++;
+        }
+      }
+
+      alert(t('messages.importSuccess', `Imported ${imported} birthdays. Failed: ${failed}`));
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      alert(t('messages.importError', 'Error importing CSV file'));
+    } finally {
+      setIsImporting(false);
+      event.target.value = '';
     }
   };
 
@@ -160,7 +207,18 @@ export const Dashboard = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <label className="flex items-center gap-2 px-4 py-2 sm:px-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md cursor-pointer">
+              <Upload className="w-5 h-5" />
+              <span className="hidden sm:inline">{t('birthday.importCSV', 'Import CSV')}</span>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVImport}
+                disabled={isImporting}
+                className="hidden"
+              />
+            </label>
             <button
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md"

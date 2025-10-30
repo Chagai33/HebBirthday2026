@@ -7,12 +7,13 @@ import { useDeleteBirthday, useRefreshHebrewData } from '../../hooks/useBirthday
 import { useGroups } from '../../hooks/useGroups';
 import { useGroupFilter } from '../../contexts/GroupFilterContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift } from 'lucide-react';
+import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift, Download } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 import { UpcomingGregorianBirthdaysModal } from '../modals/UpcomingGregorianBirthdaysModal';
 import { WishlistModal } from '../modals/WishlistModal';
 import { birthdayCalculationsService } from '../../services/birthdayCalculations.service';
 import { calendarPreferenceService } from '../../services/calendarPreference.service';
+import { exportBirthdaysToCSV } from '../../utils/csvExport';
 
 interface BirthdayListProps {
   birthdays: Birthday[];
@@ -147,6 +148,40 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!window.confirm(t('common.confirmDelete'))) return;
+
+    const deletePromises = Array.from(selectedIds).map((id) =>
+      deleteBirthday.mutateAsync(id)
+    );
+
+    try {
+      await Promise.all(deletePromises);
+      setSelectedIds(new Set());
+    } catch (error) {
+      console.error('Error deleting birthdays:', error);
+    }
+  };
+
+  const handleBulkRefresh = async () => {
+    const birthdaysToRefresh = birthdays.filter((b) => selectedIds.has(b.id));
+
+    for (const birthday of birthdaysToRefresh) {
+      try {
+        await refreshHebrewData.mutateAsync({
+          birthdayId: birthday.id,
+          birthDate: birthday.birth_date_gregorian,
+          afterSunset: birthday.after_sunset,
+          gender: birthday.gender,
+        });
+      } catch (error) {
+        console.error('Error refreshing birthday:', birthday.id, error);
+      }
+    }
+
+    setSelectedIds(new Set());
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
@@ -188,6 +223,50 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           <option value="date">{t('common.sortByDate', 'Sort by Date')}</option>
         </select>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-blue-900">
+                {selectedIds.size} {t('common.selected')}
+              </span>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="text-sm text-blue-600 hover:text-blue-700 underline"
+              >
+                {t('common.clear')}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleBulkDelete()}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('common.delete')}
+              </button>
+              <button
+                onClick={() => handleBulkRefresh()}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('birthday.refresh')}
+              </button>
+              <button
+                onClick={() => {
+                  const selectedBirthdays = birthdays.filter(b => selectedIds.has(b.id));
+                  exportBirthdaysToCSV(selectedBirthdays, `birthdays-${new Date().toISOString().split('T')[0]}.csv`);
+                }}
+                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+              >
+                <Download className="w-4 h-4" />
+                {t('birthday.exportSelected')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showGroupFilter && groups.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-4">

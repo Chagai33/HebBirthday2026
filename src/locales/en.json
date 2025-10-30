@@ -86,6 +86,7 @@
     "gregorianOnly": "Gregorian Only",
     "hebrewOnly": "Hebrew Only",
     "upcomingGregorianBirthdays": "Upcoming Gregorian Birthdays",
+    "importCSV": "Import CSV",
     "both": "Both",
     "overridePreference": "Override Group Preference",
     "groupPreference": "Group preference",
@@ -166,6 +167,8 @@
   },
   "validation": {
     "required": "This field is required",
+    "importSuccess": "Import completed successfully",
+    "importError": "Error importing CSV file",
     "invalidEmail": "Invalid email address",
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordsDontMatch": "Passwords don't match",

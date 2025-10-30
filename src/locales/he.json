@@ -102,6 +102,7 @@
     "refreshError": "שגיאה ברענון הנתונים",
     "futureBirthdays": "ימי הולדת עבריים קרובים",
     "upcomingGregorianBirthdays": "ימי הולדת לועזיים קרובים",
+    "importCSV": "ייבא CSV",
     "next10Years": "עשר השנים הבאות",
     "noFutureDates": "אין תאריכים זמינים",
     "next": "הבא",
@@ -178,6 +179,8 @@
   "validation": {
     "required": "שדה זה הוא חובה",
     "invalidEmail": "כתובת דואר אלקטרוני לא תקינה",
+    "importSuccess": "ייבוא הושלם בהצלחה",
+    "importError": "שגיאה בייבוא קובץ CSV",
     "passwordTooShort": "הסיסמה חייבת להכיל לפחות 6 תווים",
     "passwordsDontMatch": "הסיסמאות אינן תואמות",
     "invalidPhoneNumber": "מספר טלפון לא תקין"
