@@ -22,8 +22,6 @@ export const wishlistService = {
     description: string,
     priority: WishlistPriority
   ): Promise<string> {
-    console.log('➕ Creating wishlist item:', { birthdayId, tenantId, itemName, priority });
-
     const itemData = {
       birthday_id: birthdayId,
       tenant_id: tenantId,
@@ -34,11 +32,7 @@ export const wishlistService = {
       updated_at: serverTimestamp(),
     };
 
-    console.log('📝 Item data to save:', itemData);
-
     const itemRef = await addDoc(collection(db, 'wishlist_items'), itemData);
-
-    console.log('✅ Wishlist item created with ID:', itemRef.id);
 
     return itemRef.id;
   },
@@ -62,20 +56,16 @@ export const wishlistService = {
     await deleteDoc(doc(db, 'wishlist_items', itemId));
   },
 
-  async getItemsForBirthday(birthdayId: string): Promise<WishlistItem[]> {
-    console.log('🔍 Fetching wishlist items for birthday:', birthdayId);
-    const q = query(
-      collection(db, 'wishlist_items'),
-      where('birthday_id', '==', birthdayId)
-    );
+  async getItemsForBirthday(birthdayId: string, tenantId?: string): Promise<WishlistItem[]> {
+    const constraints = [where('birthday_id', '==', birthdayId)];
 
-    const snapshot = await getDocs(q);
-    console.log('📦 Found wishlist items:', snapshot.docs.length);
-
-    if (snapshot.docs.length > 0) {
-      console.log('📝 First item data:', snapshot.docs[0].data());
+    if (tenantId) {
+      constraints.push(where('tenant_id', '==', tenantId));
     }
 
+    const q = query(collection(db, 'wishlist_items'), ...constraints);
+
+    const snapshot = await getDocs(q);
     const items = snapshot.docs.map((doc) => this.docToWishlistItem(doc.id, doc.data()));
 
     const priorityOrder = { high: 1, medium: 2, low: 3 };

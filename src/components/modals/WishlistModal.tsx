@@ -17,13 +17,10 @@ interface WishlistModalProps {
 
 export const WishlistModal = ({ isOpen, onClose, birthday }: WishlistModalProps) => {
   const { t } = useTranslation();
-  const { data: items = [], isLoading, error } = useWishlistItems(birthday.id);
+  const { data: items = [], isLoading } = useWishlistItems(birthday.id);
   const createItem = useCreateWishlistItem();
   const updateItem = useUpdateWishlistItem();
   const deleteItem = useDeleteWishlistItem();
-
-  console.log('🎁 WishlistModal opened for birthday:', birthday.id);
-  console.log('📊 Items loaded:', items.length, 'Loading:', isLoading, 'Error:', error);
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

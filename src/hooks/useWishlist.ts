@@ -4,18 +4,12 @@ import { WishlistPriority } from '../types';
 import { useTenant } from '../contexts/TenantContext';
 
 export const useWishlistItems = (birthdayId: string) => {
-  console.log('🎯 useWishlistItems called with birthdayId:', birthdayId);
+  const { currentTenant } = useTenant();
+
   return useQuery({
-    queryKey: ['wishlist', birthdayId],
-    queryFn: async () => {
-      console.log('🚀 Query function executing for:', birthdayId);
-      const result = await wishlistService.getItemsForBirthday(birthdayId);
-      console.log('✨ Query result:', result);
-      return result;
-    },
-    enabled: !!birthdayId,
-    staleTime: 0,
-    gcTime: 0,
+    queryKey: ['wishlist', birthdayId, currentTenant?.id],
+    queryFn: () => wishlistService.getItemsForBirthday(birthdayId, currentTenant?.id),
+    enabled: !!birthdayId && !!currentTenant,
   });
 };
 
@@ -47,7 +41,7 @@ export const useCreateWishlistItem = () => {
       );
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId, currentTenant?.id] });
     },
   });
 };
@@ -68,7 +62,7 @@ export const useUpdateWishlistItem = () => {
       return wishlistService.updateItem(itemId, data);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId, currentTenant?.id] });
     },
   });
 };
@@ -81,7 +75,7 @@ export const useDeleteWishlistItem = () => {
       return wishlistService.deleteItem(itemId);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist', variables.birthdayId, currentTenant?.id] });
     },
   });
 };

@@ -77,7 +77,7 @@ export const Dashboard = () => {
     try {
       let wishlist: any[] = [];
       try {
-        wishlist = await wishlistService.getItemsForBirthday(birthday.id);
+        wishlist = await wishlistService.getItemsForBirthday(birthday.id, currentTenant?.id);
       } catch (wishlistError) {
         console.warn('Could not load wishlist, continuing without it:', wishlistError);
       }
