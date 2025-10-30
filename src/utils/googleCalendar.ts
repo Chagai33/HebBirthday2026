@@ -47,16 +47,25 @@ export function createBirthdayCalendarEvent(
   wishlist?: WishlistItem[]
 ): GoogleCalendarEvent {
   const hebrewDate = birthday.next_upcoming_hebrew_birthday;
+  const gregorianDate = birthday.calculations?.nextGregorianBirthday;
 
-  if (!hebrewDate) {
-    throw new Error('No Hebrew date available for this birthday');
+  let startDate: Date;
+  let age: number;
+
+  if (hebrewDate) {
+    startDate = parseISO(hebrewDate);
+    age = birthday.next_upcoming_hebrew_year && birthday.hebrew_year
+      ? birthday.next_upcoming_hebrew_year - birthday.hebrew_year
+      : (birthday.calculations?.ageAtNextHebrewBirthday || 0);
+  } else if (gregorianDate) {
+    startDate = new Date(gregorianDate);
+    age = birthday.calculations?.ageAtNextGregorianBirthday || new Date().getFullYear() - parseISO(birthday.birth_date_gregorian).getFullYear();
+  } else {
+    throw new Error('No date available for this birthday');
   }
 
-  const startDate = parseISO(hebrewDate);
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 1);
-
-  const age = new Date().getFullYear() - parseISO(birthday.birth_date_gregorian).getFullYear();
 
   let title: string;
   if (language === 'he') {

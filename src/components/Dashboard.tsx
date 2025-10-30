@@ -77,7 +77,7 @@ export const Dashboard = () => {
       openGoogleCalendarForBirthday(birthday, language, wishlist);
     } catch (error) {
       console.error('Error opening Google Calendar:', error);
-      alert(t('messages.calendarError', 'לא ניתן לפתוח את Google Calendar. אנא נסה שנית.'));
+      alert(t('messages.calendarError'));
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, LogIn } from 'lucide-react';
@@ -8,11 +8,14 @@ export const Login: React.FC = () => {
   const { t } = useTranslation();
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const from = (location.state as any)?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +24,7 @@ export const Login: React.FC = () => {
 
     try {
       await signIn(email, password);
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || t('common.error'));
     } finally {
@@ -93,7 +96,7 @@ export const Login: React.FC = () => {
         <p className="mt-6 text-center text-sm text-gray-600">
           {t('auth.dontHaveAccount')}{' '}
           <button
-            onClick={() => navigate('/register')}
+            onClick={() => navigate('/register', { state: { email, password } })}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
             {t('auth.signUp')}

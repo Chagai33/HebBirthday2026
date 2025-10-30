@@ -190,6 +190,7 @@
     "userInvited": "משתמש הוזמן בהצלחה",
     "accountLinked": "חשבון קושר בהצלחה",
     "signInSuccess": "התחברת בהצלחה",
-    "signOutSuccess": "התנתקת בהצלחה"
+    "signOutSuccess": "התנתקת בהצלחה",
+    "calendarError": "לא ניתן לפתוח את Google Calendar. אנא נסה שנית."
   }
 }

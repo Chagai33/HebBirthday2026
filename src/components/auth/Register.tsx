@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
@@ -8,6 +8,7 @@ export const Register: React.FC = () => {
   const { t } = useTranslation();
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,6 +16,17 @@ export const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.email) {
+      setEmail(state.email);
+    }
+    if (state?.password) {
+      setPassword(state.password);
+      setConfirmPassword(state.password);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
