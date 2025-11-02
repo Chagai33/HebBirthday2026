@@ -68,23 +68,17 @@ export const CSVImportPreviewModal = ({
     const fetchAllGroups = async () => {
       if (!currentTenant || !user || !isOpen) return;
       try {
-        console.log('Fetching groups for tenant:', currentTenant.id);
-        const allGroupsData = await groupService.getAllGroups(currentTenant.id);
-        console.log('All groups:', allGroupsData);
+        const allGroupsData = await groupService.getTenantGroups(currentTenant.id);
         setAllGroups(allGroupsData);
 
         const rootGroupsData = await groupService.getRootGroups(currentTenant.id);
-        console.log('Root groups:', rootGroupsData);
         setRootGroups(rootGroupsData);
 
         if (rootGroupsData.length > 0) {
-          console.log('Setting default parent to:', rootGroupsData[0].id, rootGroupsData[0].name);
           setNewGroupParentId(rootGroupsData[0].id);
-        } else {
-          console.warn('No root groups found!');
         }
       } catch (error) {
-        console.error('Failed to fetch all groups:', error);
+        console.error('Failed to fetch groups:', error);
       }
     };
     fetchAllGroups();
@@ -146,7 +140,7 @@ export const CSVImportPreviewModal = ({
         user.id
       );
       await refetchGroups();
-      const allGroupsData = await groupService.getAllGroups(currentTenant.id);
+      const allGroupsData = await groupService.getTenantGroups(currentTenant.id);
       setAllGroups(allGroupsData);
       setNewGroupName('');
     } catch (error) {
