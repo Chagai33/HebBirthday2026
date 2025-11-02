@@ -208,7 +208,14 @@
     "importing": "Importing...",
     "defaultGroup": "Default Group for All Records",
     "noDefaultGroup": "No Default Group",
-    "groupNote": "This group will be applied to all records without a group specified in the file"
+    "groupNote": "This group will be applied to all records without a group specified in the file",
+    "createGroup": "Create Group",
+    "newGroup": "New Group",
+    "groupNamePlaceholder": "Enter group name",
+    "parentGroup": "Parent Group (Optional)",
+    "noParent": "Root Group",
+    "rowGroup": "Group",
+    "noGroup": "No Group (will use default)"
   },
   "settings": {
     "note1": "This setting applies to all groups in this tenant by default",

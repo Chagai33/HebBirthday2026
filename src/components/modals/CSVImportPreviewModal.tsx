@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, Upload, FileText, Users } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Upload, FileText, Users, Plus, FolderPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CSVBirthdayRow, ValidationResult, Group } from '../../types';
 import { useRootGroups } from '../../hooks/useGroups';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
+import { groupService } from '../../services/group.service';
 
 interface CSVImportPreviewModalProps {
   isOpen: boolean;
@@ -18,11 +21,19 @@ export const CSVImportPreviewModal = ({
   onConfirm,
 }: CSVImportPreviewModalProps) => {
   const { t } = useTranslation();
-  const { data: groups = [] } = useRootGroups();
+  const { user } = useAuth();
+  const { currentTenant } = useTenant();
+  const { data: groups = [], refetch: refetchGroups } = useRootGroups();
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
   const [defaultGroupId, setDefaultGroupId] = useState<string>('');
+  const [rowGroupIds, setRowGroupIds] = useState<Map<number, string>>(new Map());
+  const [showGroupCreator, setShowGroupCreator] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupParentId, setNewGroupParentId] = useState<string>('');
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [allGroups, setAllGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     if (isOpen && data.length > 0) {
@@ -41,8 +52,31 @@ export const CSVImportPreviewModal = ({
         isDuplicate: row.isDuplicate || false,
       }));
       setValidationResults(results);
+
+      const initialRowGroups = new Map<number, string>();
+      data.forEach((row, index) => {
+        if (row.groupId) {
+          initialRowGroups.set(index, row.groupId);
+        }
+      });
+      setRowGroupIds(initialRowGroups);
     }
   }, [isOpen, data]);
+
+  useEffect(() => {
+    const fetchAllGroups = async () => {
+      if (!currentTenant || !user) return;
+      try {
+        const allGroupsData = await groupService.getAllGroups(currentTenant.id);
+        setAllGroups(allGroupsData);
+      } catch (error) {
+        console.error('Failed to fetch all groups:', error);
+      }
+    };
+    if (isOpen) {
+      fetchAllGroups();
+    }
+  }, [isOpen, currentTenant, user, groups]);
 
   if (!isOpen) return null;
 
@@ -69,7 +103,10 @@ export const CSVImportPreviewModal = ({
     try {
       const rowsToImport = Array.from(selectedRows).map((index) => {
         const row = data[index];
-        if (!row.groupId && defaultGroupId) {
+        const rowGroupId = rowGroupIds.get(index) || row.groupId;
+        if (rowGroupId) {
+          return { ...row, groupId: rowGroupId };
+        } else if (defaultGroupId) {
           return { ...row, groupId: defaultGroupId };
         }
         return row;
@@ -81,6 +118,43 @@ export const CSVImportPreviewModal = ({
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim() || !currentTenant || !user) return;
+
+    setIsCreatingGroup(true);
+    try {
+      await groupService.createGroup(
+        currentTenant.id,
+        {
+          name: newGroupName.trim(),
+          parentId: newGroupParentId || null,
+        },
+        user.id
+      );
+      await refetchGroups();
+      const allGroupsData = await groupService.getAllGroups(currentTenant.id);
+      setAllGroups(allGroupsData);
+      setNewGroupName('');
+      setNewGroupParentId('');
+      setShowGroupCreator(false);
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      alert(t('common.error'));
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  const updateRowGroup = (rowIndex: number, groupId: string) => {
+    const newMap = new Map(rowGroupIds);
+    if (groupId) {
+      newMap.set(rowIndex, groupId);
+    } else {
+      newMap.delete(rowIndex);
+    }
+    setRowGroupIds(newMap);
   };
 
   const validCount = validationResults.filter((r) => r.isValid).length;
@@ -157,9 +231,9 @@ export const CSVImportPreviewModal = ({
           </div>
         </div>
 
-        <div className="p-6 border-b border-gray-200 bg-blue-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+        <div className="p-6 border-b border-gray-200 bg-blue-50 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
@@ -174,9 +248,9 @@ export const CSVImportPreviewModal = ({
                 <option value="">
                   {t('csvImport.noDefaultGroup', 'ללא קבוצת ברירת מחדל')}
                 </option>
-                {groups.map((group) => (
+                {allGroups.map((group) => (
                   <option key={group.id} value={group.id}>
-                    {group.name}
+                    {group.parentId ? `  ↳ ${group.name}` : group.name}
                   </option>
                 ))}
               </select>
@@ -184,7 +258,77 @@ export const CSVImportPreviewModal = ({
                 {t('csvImport.groupNote', 'קבוצה זו תוחל על כל הרשומות שלא הוגדרה להן קבוצה בקובץ')}
               </p>
             </div>
+            <button
+              onClick={() => setShowGroupCreator(!showGroupCreator)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              {t('csvImport.createGroup', 'צור קבוצה')}
+            </button>
           </div>
+
+          {showGroupCreator && (
+            <div className="bg-white rounded-lg p-4 border border-gray-300 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <FolderPlus className="w-5 h-5 text-green-600" />
+                <h3 className="font-semibold text-gray-900">
+                  {t('csvImport.newGroup', 'קבוצה חדשה')}
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('group.name', 'שם קבוצה')}
+                  </label>
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder={t('csvImport.groupNamePlaceholder', 'הזן שם לקבוצה')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('csvImport.parentGroup', 'קבוצת אב (אופציונלי)')}
+                  </label>
+                  <select
+                    value={newGroupParentId}
+                    onChange={(e) => setNewGroupParentId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">
+                      {t('csvImport.noParent', 'קבוצת שורש')}
+                    </option>
+                    {allGroups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.parentId ? `  ↳ ${group.name}` : group.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCreateGroup}
+                  disabled={!newGroupName.trim() || isCreatingGroup}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium"
+                >
+                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('common.create', 'צור')}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowGroupCreator(false);
+                    setNewGroupName('');
+                    setNewGroupParentId('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                >
+                  {t('common.cancel', 'ביטול')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-auto p-6">
@@ -236,7 +380,7 @@ export const CSVImportPreviewModal = ({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
                         <div>
                           <p className="text-xs text-gray-500 font-medium mb-1">
                             {t('csvImport.firstName', 'שם פרטי')}
@@ -281,6 +425,27 @@ export const CSVImportPreviewModal = ({
                             {row.afterSunset ? t('common.yes', 'כן') : t('common.no', 'לא')}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="mb-2">
+                        <label className="block text-xs text-gray-500 font-medium mb-1">
+                          <Users className="w-3 h-3 inline me-1" />
+                          {t('csvImport.rowGroup', 'קבוצה')}
+                        </label>
+                        <select
+                          value={rowGroupIds.get(index) || row.groupId || ''}
+                          onChange={(e) => updateRowGroup(index, e.target.value)}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        >
+                          <option value="">
+                            {t('csvImport.noGroup', 'ללא קבוצה (ישתמש בברירת מחדל)')}
+                          </option>
+                          {allGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.parentId ? `  ↳ ${group.name}` : group.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {validation && (validation.errors.length > 0 || validation.warnings.length > 0 || validation.isDuplicate) && (
