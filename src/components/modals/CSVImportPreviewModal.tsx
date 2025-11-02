@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, Upload, FileText } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Upload, FileText, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CSVBirthdayRow, ValidationResult } from '../../types';
+import { CSVBirthdayRow, ValidationResult, Group } from '../../types';
+import { useRootGroups } from '../../hooks/useGroups';
 
 interface CSVImportPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: CSVBirthdayRow[];
-  onConfirm: (selectedRows: CSVBirthdayRow[]) => Promise<void>;
+  onConfirm: (selectedRows: CSVBirthdayRow[], defaultGroupId?: string) => Promise<void>;
 }
 
 export const CSVImportPreviewModal = ({
@@ -17,9 +18,11 @@ export const CSVImportPreviewModal = ({
   onConfirm,
 }: CSVImportPreviewModalProps) => {
   const { t } = useTranslation();
+  const { data: groups = [] } = useRootGroups();
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
+  const [defaultGroupId, setDefaultGroupId] = useState<string>('');
 
   useEffect(() => {
     if (isOpen && data.length > 0) {
@@ -64,8 +67,14 @@ export const CSVImportPreviewModal = ({
   const handleConfirm = async () => {
     setIsImporting(true);
     try {
-      const rowsToImport = Array.from(selectedRows).map((index) => data[index]);
-      await onConfirm(rowsToImport);
+      const rowsToImport = Array.from(selectedRows).map((index) => {
+        const row = data[index];
+        if (!row.groupId && defaultGroupId) {
+          return { ...row, groupId: defaultGroupId };
+        }
+        return row;
+      });
+      await onConfirm(rowsToImport, defaultGroupId);
       onClose();
     } catch (error) {
       console.error('Import failed:', error);
@@ -144,6 +153,36 @@ export const CSVImportPreviewModal = ({
                 </p>
               </div>
               <p className="text-2xl font-bold text-yellow-700">{duplicateCount}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-b border-gray-200 bg-blue-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('csvImport.defaultGroup', 'קבוצת ברירת מחדל לכל הרשומות')}
+              </label>
+              <select
+                value={defaultGroupId}
+                onChange={(e) => setDefaultGroupId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="">
+                  {t('csvImport.noDefaultGroup', 'ללא קבוצת ברירת מחדל')}
+                </option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-600 mt-1">
+                {t('csvImport.groupNote', 'קבוצה זו תוחל על כל הרשומות שלא הוגדרה להן קבוצה בקובץ')}
+              </p>
             </div>
           </div>
         </div>

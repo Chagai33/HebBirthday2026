@@ -205,7 +205,10 @@
     "afterSunset": "After Sunset",
     "duplicateWarning": "This record may already exist in the system",
     "import": "Import",
-    "importing": "Importing..."
+    "importing": "Importing...",
+    "defaultGroup": "Default Group for All Records",
+    "noDefaultGroup": "No Default Group",
+    "groupNote": "This group will be applied to all records without a group specified in the file"
   },
   "settings": {
     "note1": "This setting applies to all groups in this tenant by default",
