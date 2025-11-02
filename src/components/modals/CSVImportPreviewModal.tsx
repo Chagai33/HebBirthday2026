@@ -272,7 +272,7 @@ export const CSVImportPreviewModal = ({
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && newGroupName.trim() && newGroupParentId) {
+                      if (e.key === 'Enter' && newGroupName.trim() && selectedParentGroup) {
                         handleCreateGroup();
                       }
                     }}
@@ -285,43 +285,36 @@ export const CSVImportPreviewModal = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('csvImport.underWhichGroup', 'תחת איזו קבוצה ראשית?')} *
                   </label>
-                  {rootGroups.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg bg-gray-50">
-                      {t('csvImport.loadingGroups', 'טוען קבוצות...')}
-                    </div>
-                  ) : (
-                    <select
-                      value={newGroupParentId}
-                      onChange={(e) => setNewGroupParentId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                    >
-                      {rootGroups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    {newGroupParentId && rootGroups.find(g => g.id === newGroupParentId)
-                      ? t('csvImport.willCreateUnder', `תיווצר תחת "${rootGroups.find(g => g.id === newGroupParentId)?.name}"`)
-                      : ''}
-                  </p>
+                  <select
+                    value={selectedParentGroup}
+                    onChange={(e) => setSelectedParentGroup(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">{t('birthday.selectGroup')}</option>
+                    {rootGroups.map((root) => (
+                      <option key={root.id} value={root.id}>
+                        {root.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="flex items-center gap-2 pt-2">
                 <button
+                  type="button"
                   onClick={handleCreateGroup}
-                  disabled={!newGroupName.trim() || !newGroupParentId || isCreatingGroup}
+                  disabled={!newGroupName.trim() || !selectedParentGroup || createGroup.isPending}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('csvImport.addSubgroup', 'הוסף תת-קבוצה')}
+                  {createGroup.isPending ? t('common.loading', 'טוען...') : t('csvImport.addSubgroup', 'הוסף תת-קבוצה')}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowGroupCreator(false);
                     setNewGroupName('');
+                    setSelectedParentGroup('');
                   }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
