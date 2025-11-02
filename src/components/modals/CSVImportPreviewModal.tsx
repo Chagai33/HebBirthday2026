@@ -32,6 +32,7 @@ export const CSVImportPreviewModal = ({
   const [showGroupCreator, setShowGroupCreator] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupParentId, setNewGroupParentId] = useState<string>('');
+  const [rootGroups, setRootGroups] = useState<Group[]>([]);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [allGroups, setAllGroups] = useState<Group[]>([]);
 
@@ -69,6 +70,13 @@ export const CSVImportPreviewModal = ({
       try {
         const allGroupsData = await groupService.getAllGroups(currentTenant.id);
         setAllGroups(allGroupsData);
+
+        const rootGroupsData = await groupService.getRootGroups(currentTenant.id);
+        setRootGroups(rootGroupsData);
+
+        if (rootGroupsData.length > 0 && !newGroupParentId) {
+          setNewGroupParentId(rootGroupsData[0].id);
+        }
       } catch (error) {
         console.error('Failed to fetch all groups:', error);
       }
@@ -121,7 +129,7 @@ export const CSVImportPreviewModal = ({
   };
 
   const handleCreateGroup = async () => {
-    if (!newGroupName.trim() || !currentTenant || !user) return;
+    if (!newGroupName.trim() || !newGroupParentId || !currentTenant || !user) return;
 
     setIsCreatingGroup(true);
     try {
@@ -129,7 +137,7 @@ export const CSVImportPreviewModal = ({
         currentTenant.id,
         {
           name: newGroupName.trim(),
-          parentId: newGroupParentId || null,
+          parentId: newGroupParentId,
         },
         user.id
       );
@@ -137,7 +145,6 @@ export const CSVImportPreviewModal = ({
       const allGroupsData = await groupService.getAllGroups(currentTenant.id);
       setAllGroups(allGroupsData);
       setNewGroupName('');
-      setNewGroupParentId('');
     } catch (error) {
       console.error('Failed to create group:', error);
       alert(t('common.error'));
@@ -271,70 +278,66 @@ export const CSVImportPreviewModal = ({
               <div className="flex items-center gap-2 mb-2">
                 <FolderPlus className="w-5 h-5 text-green-600" />
                 <h3 className="font-semibold text-gray-900">
-                  {t('csvImport.createGroupTitle', 'צור קבוצה חדשה')}
+                  {t('csvImport.createSubgroupTitle', 'צור תת-קבוצה')}
                 </h3>
               </div>
               <p className="text-xs text-gray-600 mb-3">
-                {t('csvImport.createGroupHint', 'צור קבוצה ראשית (כמו "משפחת כהן") או תת-קבוצה (כמו "הורים" תחת "משפחת כהן")')}
+                {t('csvImport.createSubgroupHint', 'צור תת-קבוצה תחת משפחה/חברים/עבודה, למשל: "יחיאל" תחת "משפחה"')}
               </p>
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('csvImport.groupNameLabel', 'שם הקבוצה')} *
+                    {t('csvImport.subgroupNameLabel', 'שם התת-קבוצה')} *
                   </label>
                   <input
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && newGroupName.trim()) {
+                      if (e.key === 'Enter' && newGroupName.trim() && newGroupParentId) {
                         handleCreateGroup();
                       }
                     }}
-                    placeholder={t('csvImport.groupNamePlaceholder', 'למשל: משפחת כהן, חברי עבודה, וכו...')}
+                    placeholder={t('csvImport.subgroupPlaceholder', 'למשל: יחיאל, עמיתי צוות, וכו...')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     autoFocus
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('csvImport.parentGroupLabel', 'תחת איזו קבוצה? (אופציונלי)')}
+                    {t('csvImport.underWhichGroup', 'תחת איזו קבוצה ראשית?')} *
                   </label>
                   <select
                     value={newGroupParentId}
                     onChange={(e) => setNewGroupParentId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                   >
-                    <option value="">
-                      {t('csvImport.rootGroupOption', 'קבוצה ראשית (לא תחת קבוצה אחרת)')}
-                    </option>
-                    {allGroups.filter(g => g.isRoot || !g.parentId).map((group) => (
+                    {rootGroups.map((group) => (
                       <option key={group.id} value={group.id}>
                         {group.name}
                       </option>
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    {newGroupParentId
-                      ? t('csvImport.willCreateSubgroup', 'תיווצר תת-קבוצה')
-                      : t('csvImport.willCreateRootGroup', 'תיווצר קבוצה ראשית')}
+                    {newGroupParentId && rootGroups.find(g => g.id === newGroupParentId)
+                      ? t('csvImport.willCreateUnder', `תיווצר תחת "${rootGroups.find(g => g.id === newGroupParentId)?.name}"`)
+                      : ''}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 pt-2">
                 <button
                   onClick={handleCreateGroup}
-                  disabled={!newGroupName.trim() || isCreatingGroup}
+                  disabled={!newGroupName.trim() || !newGroupParentId || isCreatingGroup}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('csvImport.addGroup', 'הוסף קבוצה')}
+                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('csvImport.addSubgroup', 'הוסף תת-קבוצה')}
                 </button>
                 <button
                   onClick={() => {
                     setShowGroupCreator(false);
                     setNewGroupName('');
-                    setNewGroupParentId('');
                   }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
