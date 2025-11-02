@@ -324,7 +324,7 @@ const CategorySection = ({
   onDeleteGroup,
 }: CategorySectionProps) => {
   const { t } = useTranslation();
-  const { data: childGroups = [], isLoading } = useChildGroups(rootGroup.id);
+  const { data: childGroups = [], isLoading } = useChildGroups(isExpanded ? rootGroup.id : null);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
