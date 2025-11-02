@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Layout } from './layout/Layout';
 import { BirthdayList } from './birthdays/BirthdayList';
 import { BirthdayForm } from './birthdays/BirthdayForm';
@@ -27,6 +28,7 @@ export const Dashboard = () => {
   const { selectedGroupIds } = useGroupFilter();
   const { data: rootGroups = [], isLoading: isLoadingGroups } = useRootGroups();
   const initializeRootGroups = useInitializeRootGroups();
+  const queryClient = useQueryClient();
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
@@ -156,7 +158,12 @@ export const Dashboard = () => {
       }
     }
 
+    // Invalidate React Query cache to refresh the UI
+    await queryClient.invalidateQueries({ queryKey: ['birthdays'] });
+    await queryClient.invalidateQueries({ queryKey: ['upcomingBirthdays'] });
+
     alert(t('messages.importSuccess', `יובאו ${imported} ימי הולדת. נכשלו: ${failed}`));
+    setShowCSVPreview(false);
   };
 
   if (!currentTenant) {

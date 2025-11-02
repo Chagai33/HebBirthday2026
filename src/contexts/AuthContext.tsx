@@ -24,8 +24,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
+      try {
+        if (firebaseUser) {
           let tokenResult = await firebaseUser.getIdTokenResult(true);
           let retries = 0;
           const maxRetries = 10;
@@ -62,14 +62,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await authService.signOut();
             setUser(null);
           }
-        } catch (error) {
-          console.error('Error loading user data:', error);
+        } else {
           setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error('Error loading user data:', error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

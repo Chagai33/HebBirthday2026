@@ -24,10 +24,10 @@ export const Login: React.FC = () => {
 
     try {
       await signIn(email, password);
-      navigate(from, { replace: true });
+      // Don't navigate here - let AuthContext's onAuthStateChanged handle it
+      // The ProtectedRoute will automatically redirect when user is loaded
     } catch (err: any) {
       setError(err.message || t('common.error'));
-    } finally {
       setLoading(false);
     }
   };

@@ -46,10 +46,9 @@ export const Register: React.FC = () => {
 
     try {
       await signUp(email, password, displayName);
-      navigate('/');
+      // Don't navigate here - let AuthContext's onAuthStateChanged handle it
     } catch (err: any) {
       setError(err.message || t('common.error'));
-    } finally {
       setLoading(false);
     }
   };
