@@ -101,7 +101,7 @@ export interface WishlistItem {
 export interface BirthdayFormData {
   firstName: string;
   lastName: string;
-  birthDateGregorian: Date;
+  birthDateGregorian: Date | string;
   afterSunset?: boolean;
   gender?: Gender;
   groupId: string;

@@ -24,17 +24,38 @@ export const birthdayService = {
   ): Promise<string> {
     return retryFirestoreOperation(async () => {
       const birthDate = data.birthDateGregorian;
+
+      let birthDateString: string;
+      let year: number;
+      let month: number;
+      let day: number;
+
+      if (typeof birthDate === 'string') {
+        // Already in YYYY-MM-DD format from CSV
+        birthDateString = birthDate;
+        const [y, m, d] = birthDate.split('-').map(Number);
+        year = y;
+        month = m;
+        day = d;
+      } else {
+        // Date object from form
+        birthDateString = birthDate.toISOString().split('T')[0];
+        year = birthDate.getFullYear();
+        month = birthDate.getMonth() + 1;
+        day = birthDate.getDate();
+      }
+
       const birthdayRef = await addDoc(collection(db, 'birthdays'), {
         tenant_id: tenantId,
         group_id: data.groupId,
         first_name: data.firstName,
         last_name: data.lastName,
-        birth_date_gregorian: birthDate.toISOString().split('T')[0],
+        birth_date_gregorian: birthDateString,
         after_sunset: data.afterSunset ?? false,
         gender: data.gender,
-        gregorian_year: birthDate.getFullYear(),
-        gregorian_month: birthDate.getMonth() + 1,
-        gregorian_day: birthDate.getDate(),
+        gregorian_year: year,
+        gregorian_month: month,
+        gregorian_day: day,
         calendar_preference_override: data.calendarPreferenceOverride || null,
         notes: data.notes || '',
         archived: false,
@@ -65,10 +86,22 @@ export const birthdayService = {
     if (data.lastName !== undefined) updateData.last_name = data.lastName;
     if (data.birthDateGregorian !== undefined) {
       const birthDate = data.birthDateGregorian;
-      updateData.birth_date_gregorian = birthDate.toISOString().split('T')[0];
-      updateData.gregorian_year = birthDate.getFullYear();
-      updateData.gregorian_month = birthDate.getMonth() + 1;
-      updateData.gregorian_day = birthDate.getDate();
+
+      if (typeof birthDate === 'string') {
+        // Already in YYYY-MM-DD format
+        updateData.birth_date_gregorian = birthDate;
+        const [y, m, d] = birthDate.split('-').map(Number);
+        updateData.gregorian_year = y;
+        updateData.gregorian_month = m;
+        updateData.gregorian_day = d;
+      } else {
+        // Date object from form
+        updateData.birth_date_gregorian = birthDate.toISOString().split('T')[0];
+        updateData.gregorian_year = birthDate.getFullYear();
+        updateData.gregorian_month = birthDate.getMonth() + 1;
+        updateData.gregorian_day = birthDate.getDate();
+      }
+
       updateData.birth_date_hebrew_string = null;
       updateData.next_upcoming_hebrew_birthday = null;
       updateData.future_hebrew_birthdays = [];

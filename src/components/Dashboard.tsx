@@ -135,15 +135,12 @@ export const Dashboard = () => {
 
     for (const row of selectedRows) {
       try {
-        const [year, month, day] = row.birthDate.split('-').map(Number);
-        const birthDate = new Date(year, month - 1, day);
-
         await birthdayService.createBirthday(
           currentTenant.id,
           {
             firstName: row.firstName,
             lastName: row.lastName,
-            birthDateGregorian: birthDate,
+            birthDateGregorian: row.birthDate,
             afterSunset: row.afterSunset,
             gender: row.gender,
             groupId: row.groupId || '',
