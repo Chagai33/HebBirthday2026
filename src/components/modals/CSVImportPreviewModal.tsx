@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Upload, FileText, Users, Plus, FolderPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CSVBirthdayRow, ValidationResult, Group } from '../../types';
-import { useRootGroups } from '../../hooks/useGroups';
+import { CSVBirthdayRow, ValidationResult } from '../../types';
+import { useGroups, useCreateGroup } from '../../hooks/useGroups';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { groupService } from '../../services/group.service';
 
 interface CSVImportPreviewModalProps {
   isOpen: boolean;
@@ -23,7 +22,8 @@ export const CSVImportPreviewModal = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { currentTenant } = useTenant();
-  const { data: groups = [], refetch: refetchGroups } = useRootGroups();
+  const { data: allGroups = [], refetch: refetchGroups } = useGroups();
+  const createGroup = useCreateGroup();
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
@@ -31,10 +31,7 @@ export const CSVImportPreviewModal = ({
   const [rowGroupIds, setRowGroupIds] = useState<Map<number, string>>(new Map());
   const [showGroupCreator, setShowGroupCreator] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupParentId, setNewGroupParentId] = useState<string>('');
-  const [rootGroups, setRootGroups] = useState<Group[]>([]);
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
-  const [allGroups, setAllGroups] = useState<Group[]>([]);
+  const [selectedParentGroup, setSelectedParentGroup] = useState<string>('');
 
   useEffect(() => {
     if (isOpen && data.length > 0) {
@@ -64,25 +61,8 @@ export const CSVImportPreviewModal = ({
     }
   }, [isOpen, data]);
 
-  useEffect(() => {
-    const fetchAllGroups = async () => {
-      if (!currentTenant || !user || !isOpen) return;
-      try {
-        const allGroupsData = await groupService.getTenantGroups(currentTenant.id);
-        setAllGroups(allGroupsData);
-
-        const rootGroupsData = await groupService.getRootGroups(currentTenant.id);
-        setRootGroups(rootGroupsData);
-
-        if (rootGroupsData.length > 0) {
-          setNewGroupParentId(rootGroupsData[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to fetch groups:', error);
-      }
-    };
-    fetchAllGroups();
-  }, [isOpen, currentTenant, user]);
+  const rootGroups = allGroups.filter(g => g.is_root);
+  const childGroups = allGroups.filter(g => !g.is_root);
 
   if (!isOpen) return null;
 
@@ -127,27 +107,20 @@ export const CSVImportPreviewModal = ({
   };
 
   const handleCreateGroup = async () => {
-    if (!newGroupName.trim() || !newGroupParentId || !currentTenant || !user) return;
+    if (!newGroupName.trim() || !selectedParentGroup) return;
 
-    setIsCreatingGroup(true);
     try {
-      await groupService.createGroup(
-        currentTenant.id,
-        {
-          name: newGroupName.trim(),
-          parentId: newGroupParentId,
-        },
-        user.id
-      );
+      await createGroup.mutateAsync({
+        name: newGroupName.trim(),
+        parentId: selectedParentGroup,
+      });
       await refetchGroups();
-      const allGroupsData = await groupService.getTenantGroups(currentTenant.id);
-      setAllGroups(allGroupsData);
       setNewGroupName('');
+      setSelectedParentGroup('');
+      setShowGroupCreator(false);
     } catch (error) {
       console.error('Failed to create group:', error);
       alert(t('common.error'));
-    } finally {
-      setIsCreatingGroup(false);
     }
   };
 
