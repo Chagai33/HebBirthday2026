@@ -85,6 +85,7 @@ export const Register: React.FC = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="name"
                 required
               />
             </div>
@@ -101,6 +102,7 @@ export const Register: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="email"
                 required
               />
             </div>
@@ -117,6 +119,7 @@ export const Register: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="new-password"
                 required
                 minLength={6}
               />
@@ -134,6 +137,7 @@ export const Register: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="new-password"
                 required
                 minLength={6}
               />
