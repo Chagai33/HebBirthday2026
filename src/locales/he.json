@@ -195,6 +195,27 @@
     "accountLinked": "חשבון קושר בהצלחה",
     "signInSuccess": "התחברת בהצלחה",
     "signOutSuccess": "התנתקת בהצלחה",
-    "calendarError": "לא ניתן לפתוח את Google Calendar. אנא נסה שנית."
+    "calendarError": "לא ניתן לפתוח את Google Calendar. אנא נסה שנית.",
+    "csvEmpty": "הקובץ ריק או לא תקין",
+    "importError": "שגיאה בקריאת קובץ ה-CSV",
+    "importSuccess": "יובאו {imported} ימי הולדת. נכשלו: {failed}"
+  },
+  "csvImport": {
+    "previewTitle": "תצוגה מקדימה - ייבוא קובץ",
+    "reviewData": "בדוק את הנתונים לפני הייבוא",
+    "totalRows": "סך הכל שורות",
+    "validRows": "שורות תקינות",
+    "invalidRows": "שורות לא תקינות",
+    "duplicates": "כפילויות אפשריות",
+    "selectAll": "בחר הכל",
+    "selected": "נבחרו",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "birthDate": "תאריך לידה",
+    "gender": "מגדר",
+    "afterSunset": "אחרי שקיעה",
+    "duplicateWarning": "ייתכן שרשומה זו כבר קיימת במערכת",
+    "import": "ייבא",
+    "importing": "מייבא..."
   }
 }

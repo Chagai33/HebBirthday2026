@@ -13,8 +13,11 @@ import { Plus, Users, Calendar, TrendingUp, Cake, Upload } from 'lucide-react';
 import { isWithinInterval, addWeeks, addMonths } from 'date-fns';
 import { openGoogleCalendarForBirthday } from '../utils/googleCalendar';
 import { wishlistService } from '../services/wishlist.service';
-import { parseCSVFile, CSVBirthdayData } from '../utils/csvExport';
+import { parseCSVFile } from '../utils/csvExport';
 import { birthdayService } from '../services/birthday.service';
+import { validateAndEnrichCSVData } from '../utils/csvValidation';
+import { CSVImportPreviewModal } from './modals/CSVImportPreviewModal';
+import { CSVBirthdayRow } from '../types';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
@@ -27,7 +30,8 @@ export const Dashboard = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [editBirthday, setEditBirthday] = useState<Birthday | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
+  const [showCSVPreview, setShowCSVPreview] = useState(false);
+  const [csvData, setCsvData] = useState<CSVBirthdayRow[]>([]);
 
   const birthdays = useMemo(() => {
     if (selectedGroupIds.length === 0) return allBirthdays;
@@ -94,44 +98,67 @@ export const Dashboard = () => {
     const file = event.target.files?.[0];
     if (!file || !currentTenant || !user) return;
 
-    setIsImporting(true);
-
     try {
       const text = await file.text();
-      const data = parseCSVFile(text);
+      const parsedData = parseCSVFile(text);
 
-      let imported = 0;
-      let failed = 0;
-
-      for (const item of data) {
-        try {
-          await birthdayService.createBirthday(
-            currentTenant.id,
-            item.firstName,
-            item.lastName,
-            item.birthDate,
-            item.afterSunset,
-            item.gender,
-            item.groupId,
-            item.notes,
-            user.id,
-            item.calendarPreference
-          );
-          imported++;
-        } catch (error) {
-          console.error('Failed to import:', item, error);
-          failed++;
-        }
+      if (parsedData.length === 0) {
+        alert(t('messages.csvEmpty', 'הקובץ ריק או לא תקין'));
+        event.target.value = '';
+        return;
       }
 
-      alert(t('messages.importSuccess', `Imported ${imported} birthdays. Failed: ${failed}`));
+      const validatedData = validateAndEnrichCSVData(parsedData, allBirthdays, {
+        firstNameRequired: t('validation.firstNameRequired', 'שם פרטי הוא שדה חובה'),
+        lastNameMissing: t('validation.lastNameMissing', 'שם משפחה חסר'),
+        birthDateRequired: t('validation.birthDateRequired', 'תאריך לידה הוא שדה חובה'),
+        birthDateInvalid: t('validation.birthDateInvalid', 'תאריך לידה לא תקין'),
+        birthDateFuture: t('validation.birthDateFuture', 'תאריך לידה לא יכול להיות בעתיד'),
+        birthDateTooOld: t('validation.birthDateTooOld', 'תאריך לידה לא תקין (לפני 1900)'),
+      });
+
+      setCsvData(validatedData);
+      setShowCSVPreview(true);
     } catch (error) {
-      console.error('Error importing CSV:', error);
-      alert(t('messages.importError', 'Error importing CSV file'));
+      console.error('Error parsing CSV:', error);
+      alert(t('messages.importError', 'שגיאה בקריאת קובץ ה-CSV'));
     } finally {
-      setIsImporting(false);
       event.target.value = '';
     }
+  };
+
+  const handleConfirmImport = async (selectedRows: CSVBirthdayRow[]) => {
+    if (!currentTenant || !user) return;
+
+    let imported = 0;
+    let failed = 0;
+
+    for (const row of selectedRows) {
+      try {
+        const birthDate = new Date(row.birthDate + 'T00:00:00');
+
+        await birthdayService.createBirthday(
+          currentTenant.id,
+          {
+            firstName: row.firstName,
+            lastName: row.lastName,
+            birthDateGregorian: birthDate,
+            afterSunset: row.afterSunset,
+            gender: row.gender,
+            groupId: row.groupId || '',
+            notes: row.notes,
+            calendarPreferenceOverride: row.calendarPreference,
+          },
+          user.id
+        );
+        imported++;
+      } catch (error) {
+        console.error('Failed to import:', row, error);
+        failed++;
+      }
+    }
+
+    alert(t('messages.importSuccess', `יובאו ${imported} ימי הולדת. נכשלו: ${failed}`));
   };
 
   if (!currentTenant) {
@@ -221,7 +248,6 @@ export const Dashboard = () => {
                 type="file"
                 accept=".csv"
                 onChange={handleCSVImport}
-                disabled={isImporting}
                 className="hidden"
               />
             </label>
@@ -256,6 +282,13 @@ export const Dashboard = () => {
           editBirthday={editBirthday}
         />
       )}
+
+      <CSVImportPreviewModal
+        isOpen={showCSVPreview}
+        onClose={() => setShowCSVPreview(false)}
+        data={csvData}
+        onConfirm={handleConfirmImport}
+      />
     </Layout>
   );
 };

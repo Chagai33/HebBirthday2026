@@ -184,7 +184,28 @@
     "userInvited": "User invited successfully",
     "accountLinked": "Account linked successfully",
     "signInSuccess": "Signed in successfully",
-    "signOutSuccess": "Signed out successfully"
+    "signOutSuccess": "Signed out successfully",
+    "csvEmpty": "File is empty or invalid",
+    "importError": "Error reading CSV file",
+    "importSuccess": "Imported {imported} birthdays. Failed: {failed}"
+  },
+  "csvImport": {
+    "previewTitle": "Preview - File Import",
+    "reviewData": "Review data before importing",
+    "totalRows": "Total Rows",
+    "validRows": "Valid Rows",
+    "invalidRows": "Invalid Rows",
+    "duplicates": "Possible Duplicates",
+    "selectAll": "Select All",
+    "selected": "Selected",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "birthDate": "Birth Date",
+    "gender": "Gender",
+    "afterSunset": "After Sunset",
+    "duplicateWarning": "This record may already exist in the system",
+    "import": "Import",
+    "importing": "Importing..."
   },
   "settings": {
     "note1": "This setting applies to all groups in this tenant by default",

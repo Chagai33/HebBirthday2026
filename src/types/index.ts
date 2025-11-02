@@ -174,3 +174,25 @@ export interface EnrichedBirthday extends Birthday {
   calculations: BirthdayCalculations;
   effectivePreference: CalendarPreference;
 }
+
+export interface CSVBirthdayRow {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  afterSunset: boolean;
+  gender?: Gender;
+  groupId?: string;
+  notes?: string;
+  calendarPreference?: CalendarPreference;
+  validationErrors?: string[];
+  warnings?: string[];
+  isDuplicate?: boolean;
+}
+
+export interface ValidationResult {
+  index: number;
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  isDuplicate: boolean;
+}

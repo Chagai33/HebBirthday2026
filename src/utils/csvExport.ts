@@ -114,11 +114,25 @@ export interface CSVBirthdayData {
   calendarPreference?: 'gregorian' | 'hebrew' | 'both';
 }
 
+function normalizeHeader(header: string): string {
+  return header.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function getColumnValue(row: any, ...possibleNames: string[]): string {
+  for (const name of possibleNames) {
+    const normalizedName = normalizeHeader(name);
+    if (row[normalizedName]) {
+      return row[normalizedName];
+    }
+  }
+  return '';
+}
+
 export function parseCSVFile(csvText: string): CSVBirthdayData[] {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length < 2) return [];
 
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+  const headers = parseCSVLine(lines[0]).map(h => normalizeHeader(h));
   const data: CSVBirthdayData[] = [];
 
   for (let i = 1; i < lines.length; i++) {
@@ -130,28 +144,112 @@ export function parseCSVFile(csvText: string): CSVBirthdayData[] {
       row[header] = value;
     });
 
-    const firstName = row['first name'] || row['firstname'] || row['שם פרטי'] || '';
-    const lastName = row['last name'] || row['lastname'] || row['שם משפחה'] || '';
-    const birthDate = row['birth date (gregorian)'] || row['birth date'] || row['birthdate'] || row['תאריך לידה לועזי'] || '';
+    const firstName = getColumnValue(
+      row,
+      'first name',
+      'firstname',
+      'first',
+      'name',
+      'שם פרטי',
+      'שם'
+    );
+
+    const lastName = getColumnValue(
+      row,
+      'last name',
+      'lastname',
+      'last',
+      'surname',
+      'family name',
+      'שם משפחה',
+      'משפחה'
+    );
+
+    const birthDate = getColumnValue(
+      row,
+      'birth date (gregorian)',
+      'birth date',
+      'birthdate',
+      'birthday',
+      'date of birth',
+      'dob',
+      'date',
+      'תאריך לידה',
+      'תאריך לידה לועזי',
+      'יום הולדת',
+      'תאריך'
+    );
 
     if (!firstName || !birthDate) continue;
 
-    const afterSunsetValue = (row['after sunset'] || row['אחרי שקיעה'] || '').toLowerCase();
-    const genderValue = (row['gender'] || row['מגדר'] || '').toLowerCase();
-    const calPrefValue = (row['calendar preference'] || row['calendarpreference'] || row['העדפת לוח שנה'] || '').toLowerCase();
+    const afterSunsetValue = getColumnValue(
+      row,
+      'after sunset',
+      'aftersunset',
+      'sunset',
+      'אחרי שקיעה',
+      'שקיעה'
+    ).toLowerCase();
+
+    const genderValue = getColumnValue(
+      row,
+      'gender',
+      'sex',
+      'מגדר',
+      'מין'
+    ).toLowerCase();
+
+    const calPrefValue = getColumnValue(
+      row,
+      'calendar preference',
+      'calendarpreference',
+      'calendar',
+      'העדפת לוח שנה',
+      'לוח שנה'
+    ).toLowerCase();
+
+    const notes = getColumnValue(
+      row,
+      'notes',
+      'note',
+      'comment',
+      'comments',
+      'הערות',
+      'הערה'
+    );
+
+    const groupId = getColumnValue(
+      row,
+      'group id',
+      'groupid',
+      'group',
+      'קבוצה',
+      'מזהה קבוצה'
+    );
 
     data.push({
       firstName,
       lastName,
       birthDate,
-      afterSunset: afterSunsetValue === 'yes' || afterSunsetValue === 'true' || afterSunsetValue === '1',
-      gender: genderValue === 'male' || genderValue === 'female' || genderValue === 'other'
-        ? genderValue as any
+      afterSunset: afterSunsetValue === 'yes' ||
+                   afterSunsetValue === 'true' ||
+                   afterSunsetValue === '1' ||
+                   afterSunsetValue === 'כן',
+      gender: genderValue === 'male' || genderValue === 'זכר' || genderValue === 'ז'
+        ? 'male'
+        : genderValue === 'female' || genderValue === 'נקבה' || genderValue === 'נ'
+        ? 'female'
+        : genderValue === 'other' || genderValue === 'אחר'
+        ? 'other'
         : undefined,
-      groupId: row['group id'] || row['groupid'] || undefined,
-      notes: row['notes'] || undefined,
-      calendarPreference: calPrefValue === 'gregorian' || calPrefValue === 'hebrew' || calPrefValue === 'both'
-        ? calPrefValue as any
+      groupId: groupId || undefined,
+      notes: notes || undefined,
+      calendarPreference: calPrefValue === 'gregorian' || calPrefValue === 'לועזי'
+        ? 'gregorian'
+        : calPrefValue === 'hebrew' || calPrefValue === 'עברי'
+        ? 'hebrew'
+        : calPrefValue === 'both' || calPrefValue === 'שניהם'
+        ? 'both'
         : undefined
     });
   }
