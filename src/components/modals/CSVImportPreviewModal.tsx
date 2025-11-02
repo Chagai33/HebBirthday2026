@@ -252,11 +252,18 @@ export const CSVImportPreviewModal = ({
                 <option value="">
                   {t('csvImport.noDefaultGroup', 'ללא קבוצת ברירת מחדל')}
                 </option>
-                {allGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.parentId ? `  ↳ ${group.name}` : group.name}
-                  </option>
-                ))}
+                {rootGroups.map((root) => {
+                  const children = childGroups.filter(c => c.parent_id === root.id);
+                  return (
+                    <optgroup key={root.id} label={root.name}>
+                      {children.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
               </select>
               <p className="text-xs text-gray-600 mt-1">
                 {t('csvImport.groupNote', 'קבוצה זו תוחל על כל הרשומות שלא הוגדרה להן קבוצה בקובץ')}
@@ -461,11 +468,18 @@ export const CSVImportPreviewModal = ({
                           <option value="">
                             {t('csvImport.noGroup', 'ללא קבוצה (ישתמש בברירת מחדל)')}
                           </option>
-                          {allGroups.map((group) => (
-                            <option key={group.id} value={group.id}>
-                              {group.parentId ? `  ↳ ${group.name}` : group.name}
-                            </option>
-                          ))}
+                          {rootGroups.map((root) => {
+                            const children = childGroups.filter(c => c.parent_id === root.id);
+                            return (
+                              <optgroup key={root.id} label={root.name}>
+                                {children.map((group) => (
+                                  <option key={group.id} value={group.id}>
+                                    {group.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            );
+                          })}
                         </select>
                       </div>
 
