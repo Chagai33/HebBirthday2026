@@ -3,13 +3,8 @@ import { Birthday, BirthdayCalculations } from '../types';
 export const birthdayCalculationsService = {
   calculateAll(
     birthday: Birthday,
-    referenceDate: Date = new Date(),
-    currentHebrewYear?: number
+    referenceDate: Date = new Date()
   ): BirthdayCalculations {
-    console.log('🎂 calculateAll called for:', birthday.hebrew_name || birthday.name);
-    console.log('Birthday object next_upcoming_hebrew_year:', birthday.next_upcoming_hebrew_year);
-    console.log('Birthday object next_upcoming_hebrew_birthday:', birthday.next_upcoming_hebrew_birthday);
-    console.log('currentHebrewYear passed to calculateAll:', currentHebrewYear);
 
     const gregAge = this.calculateCurrentGregorianAge(
       birthday.gregorian_year || 0,
@@ -22,8 +17,7 @@ export const birthdayCalculationsService = {
       birthday.hebrew_year || 0,
       birthday.next_upcoming_hebrew_birthday,
       birthday.next_upcoming_hebrew_year,
-      referenceDate,
-      currentHebrewYear
+      referenceDate
     );
 
     const nextGreg = this.calculateNextGregorianBirthday(
@@ -38,9 +32,7 @@ export const birthdayCalculationsService = {
 
     const ageAtNextHeb = nextHeb && birthday.hebrew_year && birthday.next_upcoming_hebrew_year
       ? birthday.next_upcoming_hebrew_year - birthday.hebrew_year
-      : (nextHeb && birthday.hebrew_year
-        ? this.calculateHebrewAgeAtDate(birthday.hebrew_year, nextHeb, currentHebrewYear)
-        : hebAge.age + 1);
+      : hebAge.age + 1;
 
     return {
       currentGregorianAge: gregAge.age,
@@ -88,60 +80,34 @@ export const birthdayCalculationsService = {
     hebrewBirthYear: number,
     nextHebrewBirthdayStr: string | null | undefined,
     nextUpcomingHebrewYear: number | null | undefined,
-    today: Date = new Date(),
-    currentHebrewYear?: number
+    today: Date = new Date()
   ): { age: number; hasBirthdayPassedThisYear: boolean } {
-    console.log('=== calculateCurrentHebrewAge DEBUG ===');
-    console.log('hebrewBirthYear:', hebrewBirthYear);
-    console.log('nextHebrewBirthdayStr:', nextHebrewBirthdayStr);
-    console.log('nextUpcomingHebrewYear:', nextUpcomingHebrewYear);
-    console.log('currentHebrewYear from tenant:', currentHebrewYear);
-    console.log('today:', today.toISOString());
-
-    if (!hebrewBirthYear || !nextHebrewBirthdayStr) {
-      console.log('Missing hebrewBirthYear or nextHebrewBirthdayStr - returning 0');
+    // If missing critical data, return 0
+    if (!hebrewBirthYear || !nextHebrewBirthdayStr || !nextUpcomingHebrewYear) {
+      console.warn('Missing Hebrew birthday data:', {
+        hebrewBirthYear,
+        nextHebrewBirthdayStr,
+        nextUpcomingHebrewYear
+      });
       return { age: 0, hasBirthdayPassedThisYear: false };
     }
 
+    // Parse next Hebrew birthday date
     const nextBirthday = new Date(nextHebrewBirthdayStr);
     const todayCopy = new Date(today);
     todayCopy.setHours(0, 0, 0, 0);
     nextBirthday.setHours(0, 0, 0, 0);
 
+    // Check if the birthday has already passed this Hebrew year
     const hasPassed = nextBirthday <= todayCopy;
-    console.log('nextBirthday:', nextBirthday.toISOString());
-    console.log('hasPassed (has birthday passed this year):', hasPassed);
 
-    // Use next_upcoming_hebrew_year if available (most accurate from API)
-    // Otherwise fall back to currentHebrewYear from tenant
-    let hebrewYearToUse: number;
-    let sourceUsed: string;
-    if (nextUpcomingHebrewYear) {
-      hebrewYearToUse = nextUpcomingHebrewYear;
-      sourceUsed = 'next_upcoming_hebrew_year (API)';
-    } else if (currentHebrewYear) {
-      hebrewYearToUse = currentHebrewYear;
-      sourceUsed = 'currentHebrewYear (tenant)';
-    } else {
-      // Last resort fallback - this should rarely be reached
-      const currentGregorianYear = today.getFullYear();
-      hebrewYearToUse = hebrewBirthYear + Math.floor((currentGregorianYear - 1970) * 1.0307);
-      sourceUsed = 'FALLBACK FORMULA (INACCURATE!)';
-    }
+    // Calculate age based on next_upcoming_hebrew_year from API
+    let age = nextUpcomingHebrewYear - hebrewBirthYear;
 
-    console.log('Hebrew year source:', sourceUsed);
-    console.log('hebrewYearToUse:', hebrewYearToUse);
-
-    let age = hebrewYearToUse - hebrewBirthYear;
-    console.log('age before adjustment:', age);
-
+    // If birthday hasn't passed yet, subtract 1 from age
     if (!hasPassed) {
       age--;
-      console.log('Birthday has not passed yet, subtracting 1');
     }
-
-    console.log('FINAL AGE:', age);
-    console.log('=======================================');
 
     return { age: Math.max(0, age), hasBirthdayPassedThisYear: hasPassed };
   },
@@ -198,29 +164,4 @@ export const birthdayCalculationsService = {
     return targetDate.getFullYear() - birthYear;
   },
 
-  calculateHebrewAgeAtDate(
-    hebrewBirthYear: number,
-    targetDate: Date,
-    currentHebrewYear?: number
-  ): number {
-    if (!hebrewBirthYear) return 0;
-
-    const targetYear = targetDate.getFullYear();
-    const targetMonth = targetDate.getMonth() + 1;
-    const today = new Date();
-    const currentYear = today.getFullYear();
-
-    let hebrewYearAtTarget: number;
-    if (currentHebrewYear) {
-      const gregorianYearDiff = targetYear - currentYear;
-      hebrewYearAtTarget = currentHebrewYear + gregorianYearDiff;
-    } else {
-      hebrewYearAtTarget = targetYear + 3761;
-      if (targetMonth >= 1 && targetMonth <= 8) {
-        hebrewYearAtTarget--;
-      }
-    }
-
-    return hebrewYearAtTarget - hebrewBirthYear;
-  },
 };

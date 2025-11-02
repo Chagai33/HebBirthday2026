@@ -48,8 +48,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
     return birthdays.map((birthday) => {
       const calculations = birthdayCalculationsService.calculateAll(
         birthday,
-        new Date(),
-        currentTenant?.current_hebrew_year
+        new Date()
       );
       const group = groups.find((g) => g.id === birthday.group_id);
       const effectivePreference = currentTenant

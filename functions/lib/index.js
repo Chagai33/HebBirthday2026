@@ -343,12 +343,38 @@ exports.updateNextBirthdayScheduled = functions.pubsub
                     const nextItem = upcomingDates[0];
                     const nextGregorian = typeof nextItem === 'string' ? nextItem : nextItem.gregorian;
                     const nextHebrewYear = typeof nextItem === 'string' ? null : nextItem.hebrewYear;
-                    batch.update(doc.ref, {
-                        next_upcoming_hebrew_birthday: nextGregorian,
-                        next_upcoming_hebrew_year: nextHebrewYear,
-                        updated_at: admin.firestore.FieldValue.serverTimestamp(),
-                    });
-                    updateCount++;
+                    // If nextHebrewYear is null (old data structure), refresh from API
+                    if (!nextHebrewYear && data.birth_date_hebrew_year && data.birth_date_hebrew_month && data.birth_date_hebrew_day) {
+                        try {
+                            const currentHebrewYear = await getCurrentHebrewYear();
+                            const newFutureDates = await fetchNextHebrewBirthdays(currentHebrewYear, data.birth_date_hebrew_month, data.birth_date_hebrew_day, 10);
+                            if (newFutureDates.length > 0) {
+                                const nextDate = newFutureDates[0];
+                                const gregorianDate = nextDate.gregorianDate;
+                                batch.update(doc.ref, {
+                                    next_upcoming_hebrew_birthday: `${gregorianDate.getFullYear()}-${String(gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(gregorianDate.getDate()).padStart(2, '0')}`,
+                                    next_upcoming_hebrew_year: nextDate.hebrewYear,
+                                    future_hebrew_birthdays: newFutureDates.map((item) => ({
+                                        gregorian: `${item.gregorianDate.getFullYear()}-${String(item.gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(item.gregorianDate.getDate()).padStart(2, '0')}`,
+                                        hebrewYear: item.hebrewYear
+                                    })),
+                                    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+                                });
+                                updateCount++;
+                            }
+                        }
+                        catch (error) {
+                            functions.logger.warn(`Failed to refresh birthday ${doc.id} with missing hebrewYear:`, error);
+                        }
+                    }
+                    else {
+                        batch.update(doc.ref, {
+                            next_upcoming_hebrew_birthday: nextGregorian,
+                            next_upcoming_hebrew_year: nextHebrewYear,
+                            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                        updateCount++;
+                    }
                 }
                 else {
                     try {
