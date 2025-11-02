@@ -217,6 +217,7 @@
     "underWhichGroup": "Under which main group?",
     "willCreateUnder": "Will create under",
     "addSubgroup": "Add Subgroup",
+    "loadingGroups": "Loading groups...",
     "rowGroup": "Group",
     "noGroup": "No Group (will use default)"
   },

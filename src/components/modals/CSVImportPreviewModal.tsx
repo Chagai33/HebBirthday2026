@@ -66,25 +66,29 @@ export const CSVImportPreviewModal = ({
 
   useEffect(() => {
     const fetchAllGroups = async () => {
-      if (!currentTenant || !user) return;
+      if (!currentTenant || !user || !isOpen) return;
       try {
+        console.log('Fetching groups for tenant:', currentTenant.id);
         const allGroupsData = await groupService.getAllGroups(currentTenant.id);
+        console.log('All groups:', allGroupsData);
         setAllGroups(allGroupsData);
 
         const rootGroupsData = await groupService.getRootGroups(currentTenant.id);
+        console.log('Root groups:', rootGroupsData);
         setRootGroups(rootGroupsData);
 
-        if (rootGroupsData.length > 0 && !newGroupParentId) {
+        if (rootGroupsData.length > 0) {
+          console.log('Setting default parent to:', rootGroupsData[0].id, rootGroupsData[0].name);
           setNewGroupParentId(rootGroupsData[0].id);
+        } else {
+          console.warn('No root groups found!');
         }
       } catch (error) {
         console.error('Failed to fetch all groups:', error);
       }
     };
-    if (isOpen) {
-      fetchAllGroups();
-    }
-  }, [isOpen, currentTenant, user, groups]);
+    fetchAllGroups();
+  }, [isOpen, currentTenant, user]);
 
   if (!isOpen) return null;
 
@@ -307,17 +311,23 @@ export const CSVImportPreviewModal = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('csvImport.underWhichGroup', 'תחת איזו קבוצה ראשית?')} *
                   </label>
-                  <select
-                    value={newGroupParentId}
-                    onChange={(e) => setNewGroupParentId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                  >
-                    {rootGroups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
+                  {rootGroups.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg bg-gray-50">
+                      {t('csvImport.loadingGroups', 'טוען קבוצות...')}
+                    </div>
+                  ) : (
+                    <select
+                      value={newGroupParentId}
+                      onChange={(e) => setNewGroupParentId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                    >
+                      {rootGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     {newGroupParentId && rootGroups.find(g => g.id === newGroupParentId)
                       ? t('csvImport.willCreateUnder', `תיווצר תחת "${rootGroups.find(g => g.id === newGroupParentId)?.name}"`)
