@@ -25,24 +25,23 @@ function parseDateString(dateString: string): Date | null {
   dateString = dateString.trim();
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    return new Date(dateString + 'T00:00:00');
+    const [year, month, day] = dateString.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
     const [day, month, year] = dateString.split('/');
-    return new Date(`${year}-${month}-${day}T00:00:00`);
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
     const [month, day, year] = dateString.split('/');
-    const paddedMonth = month.padStart(2, '0');
-    const paddedDay = day.padStart(2, '0');
-    return new Date(`${year}-${paddedMonth}-${paddedDay}T00:00:00`);
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
   if (/^\d{4}\/\d{2}\/\d{2}$/.test(dateString)) {
     const [year, month, day] = dateString.split('/');
-    return new Date(`${year}-${month}-${day}T00:00:00`);
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
   const date = new Date(dateString);
