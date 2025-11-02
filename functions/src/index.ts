@@ -507,6 +507,93 @@ export const fixExistingBirthdays = functions.https.onRequest(async (req, res) =
   res.send('Done');
 });
 
+export const fixAllBirthdaysHebrewYear = functions.https.onRequest(async (req, res) => {
+  try {
+    const snapshot = await db.collection('birthdays').get();
+    let fixed = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    functions.logger.log(`Processing ${snapshot.size} birthdays...`);
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+
+      // בדוק אם next_upcoming_hebrew_year חסר או null
+      if (!data.next_upcoming_hebrew_year && data.birth_date_gregorian) {
+        try {
+          functions.logger.log(`Fixing birthday ${doc.id}...`);
+
+          const birthDate = new Date(data.birth_date_gregorian);
+          const afterSunset = data.after_sunset || false;
+
+          const hebcalData = await fetchHebcalData(birthDate, afterSunset);
+          const currentHebrewYear = await getCurrentHebrewYear();
+          const futureDates = await fetchNextHebrewBirthdays(
+            currentHebrewYear,
+            hebcalData.hm,
+            hebcalData.hd,
+            10
+          );
+
+          if (futureDates.length > 0) {
+            const nextDate = futureDates[0];
+            const gregorianDate = nextDate.gregorianDate;
+
+            await doc.ref.update({
+              birth_date_hebrew_year: hebcalData.hy,
+              birth_date_hebrew_month: hebcalData.hm,
+              birth_date_hebrew_day: hebcalData.hd,
+              hebrew_year: hebcalData.hy,
+              hebrew_month: hebcalData.hm,
+              hebrew_day: hebcalData.hd,
+              next_upcoming_hebrew_year: nextDate.hebrewYear,
+              next_upcoming_hebrew_birthday: `${gregorianDate.getFullYear()}-${String(gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(gregorianDate.getDate()).padStart(2, '0')}`,
+              future_hebrew_birthdays: futureDates.map((item) => ({
+                gregorian: `${item.gregorianDate.getFullYear()}-${String(item.gregorianDate.getMonth() + 1).padStart(2, '0')}-${String(item.gregorianDate.getDate()).padStart(2, '0')}`,
+                hebrewYear: item.hebrewYear
+              })),
+              updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            fixed++;
+            functions.logger.log(`✅ Fixed birthday ${doc.id}`);
+          } else {
+            skipped++;
+            functions.logger.warn(`⚠️ No future dates for birthday ${doc.id}`);
+          }
+
+          // המתן 100ms בין בקשות כדי לא להציף את Hebcal API
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          errors++;
+          functions.logger.error(`❌ Failed to fix birthday ${doc.id}:`, error);
+        }
+      } else {
+        skipped++;
+      }
+    }
+
+    const message = `Fixed ${fixed} birthdays, skipped ${skipped}, errors ${errors}`;
+    functions.logger.log(message);
+
+    res.json({
+      success: true,
+      message,
+      fixed,
+      skipped,
+      errors,
+      total: snapshot.size
+    });
+  } catch (error) {
+    functions.logger.error('Error in fixAllBirthdaysHebrewYear:', error);
+    res.status(500).json({
+      success: false,
+      error: String(error)
+    });
+  }
+});
+
 export const migrateExistingUsers = functions.https.onRequest(async (req, res) => {
   try {
     const membersSnapshot = await db.collection('tenant_members').get();
