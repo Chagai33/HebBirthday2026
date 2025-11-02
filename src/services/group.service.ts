@@ -79,25 +79,29 @@ export const groupService = {
 
   async createGroup(
     tenantId: string,
-    name: string,
-    parentId: string,
-    color: string,
-    userId: string,
-    calendarPreference?: 'gregorian' | 'hebrew' | 'both'
+    groupInput: {
+      name: string;
+      parentId?: string | null;
+      color?: string;
+      calendarPreference?: 'gregorian' | 'hebrew' | 'both';
+    },
+    userId: string
   ): Promise<string> {
+    const isRoot = !groupInput.parentId;
+
     const groupData: any = {
       tenant_id: tenantId,
-      name,
-      parent_id: parentId,
-      is_root: false,
-      color,
+      name: groupInput.name,
+      parent_id: groupInput.parentId || null,
+      is_root: isRoot,
+      color: groupInput.color || (isRoot ? '#6366f1' : '#8b5cf6'),
       created_by: userId,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     };
 
-    if (calendarPreference) {
-      groupData.calendar_preference = calendarPreference;
+    if (groupInput.calendarPreference) {
+      groupData.calendar_preference = groupInput.calendarPreference;
     }
 
     const groupRef = await addDoc(collection(db, 'groups'), groupData);

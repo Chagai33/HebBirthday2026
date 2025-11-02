@@ -67,18 +67,23 @@ export const useCreateGroup = () => {
       calendarPreference,
     }: {
       name: string;
-      parentId: string;
-      color: string;
+      parentId?: string | null;
+      color?: string;
       calendarPreference?: 'gregorian' | 'hebrew' | 'both';
     }) => {
       if (!currentTenant || !user) {
         throw new Error('No tenant or user found');
       }
-      return groupService.createGroup(currentTenant.id, name, parentId, color, user.id, calendarPreference);
+      return groupService.createGroup(
+        currentTenant.id,
+        { name, parentId, color, calendarPreference },
+        user.id
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['childGroups'] });
+      queryClient.invalidateQueries({ queryKey: ['rootGroups'] });
     },
   });
 };

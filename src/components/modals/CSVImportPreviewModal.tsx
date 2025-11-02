@@ -138,7 +138,6 @@ export const CSVImportPreviewModal = ({
       setAllGroups(allGroupsData);
       setNewGroupName('');
       setNewGroupParentId('');
-      setShowGroupCreator(false);
     } catch (error) {
       console.error('Failed to create group:', error);
       alert(t('common.error'));
@@ -272,25 +271,34 @@ export const CSVImportPreviewModal = ({
               <div className="flex items-center gap-2 mb-2">
                 <FolderPlus className="w-5 h-5 text-green-600" />
                 <h3 className="font-semibold text-gray-900">
-                  {t('csvImport.newGroup', 'קבוצה חדשה')}
+                  {t('csvImport.createGroupTitle', 'צור קבוצה חדשה')}
                 </h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <p className="text-xs text-gray-600 mb-3">
+                {t('csvImport.createGroupHint', 'צור קבוצה ראשית (כמו "משפחת כהן") או תת-קבוצה (כמו "הורים" תחת "משפחת כהן")')}
+              </p>
+              <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('group.name', 'שם קבוצה')}
+                    {t('csvImport.groupNameLabel', 'שם הקבוצה')} *
                   </label>
                   <input
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder={t('csvImport.groupNamePlaceholder', 'הזן שם לקבוצה')}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && newGroupName.trim()) {
+                        handleCreateGroup();
+                      }
+                    }}
+                    placeholder={t('csvImport.groupNamePlaceholder', 'למשל: משפחת כהן, חברי עבודה, וכו...')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    autoFocus
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('csvImport.parentGroup', 'קבוצת אב (אופציונלי)')}
+                    {t('csvImport.parentGroupLabel', 'תחת איזו קבוצה? (אופציונלי)')}
                   </label>
                   <select
                     value={newGroupParentId}
@@ -298,23 +306,29 @@ export const CSVImportPreviewModal = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">
-                      {t('csvImport.noParent', 'קבוצת שורש')}
+                      {t('csvImport.rootGroupOption', 'קבוצה ראשית (לא תחת קבוצה אחרת)')}
                     </option>
-                    {allGroups.map((group) => (
+                    {allGroups.filter(g => g.isRoot || !g.parentId).map((group) => (
                       <option key={group.id} value={group.id}>
-                        {group.parentId ? `  ↳ ${group.name}` : group.name}
+                        {group.name}
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {newGroupParentId
+                      ? t('csvImport.willCreateSubgroup', 'תיווצר תת-קבוצה')
+                      : t('csvImport.willCreateRootGroup', 'תיווצר קבוצה ראשית')}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-2">
                 <button
                   onClick={handleCreateGroup}
                   disabled={!newGroupName.trim() || isCreatingGroup}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium"
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium flex items-center gap-2"
                 >
-                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('common.create', 'צור')}
+                  <Plus className="w-4 h-4" />
+                  {isCreatingGroup ? t('common.loading', 'טוען...') : t('csvImport.addGroup', 'הוסף קבוצה')}
                 </button>
                 <button
                   onClick={() => {
@@ -324,7 +338,7 @@ export const CSVImportPreviewModal = ({
                   }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
-                  {t('common.cancel', 'ביטול')}
+                  {t('common.close', 'סגור')}
                 </button>
               </div>
             </div>
