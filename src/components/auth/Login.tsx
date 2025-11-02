@@ -6,21 +6,21 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { signIn } = useAuth();
+  const { signIn, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const from = (location.state as any)?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
       await signIn(email, password);
@@ -28,9 +28,11 @@ export const Login: React.FC = () => {
       // The ProtectedRoute will automatically redirect when user is loaded
     } catch (err: any) {
       setError(err.message || t('common.error'));
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  const loading = isSubmitting || authLoading;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">

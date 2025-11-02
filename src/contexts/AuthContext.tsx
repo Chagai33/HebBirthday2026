@@ -24,6 +24,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Always set loading when auth state changes
+      setLoading(true);
+
       try {
         if (firebaseUser) {
           let tokenResult = await firebaseUser.getIdTokenResult(true);
@@ -78,10 +81,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     await authService.signIn(email, password);
+    // setLoading is handled by onAuthStateChanged
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
     await authService.signUp(email, password, displayName);
+    // setLoading is handled by onAuthStateChanged
   };
 
   const signOut = async () => {

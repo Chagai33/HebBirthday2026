@@ -6,7 +6,7 @@ import { Mail, Lock, User, UserPlus } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { signUp } = useAuth();
+  const { signUp, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,7 +15,7 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const state = location.state as any;
@@ -42,17 +42,18 @@ export const Register: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
       await signUp(email, password, displayName);
       // Don't navigate here - let AuthContext's onAuthStateChanged handle it
     } catch (err: any) {
       setError(err.message || t('common.error'));
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const loading = isSubmitting || authLoading;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
