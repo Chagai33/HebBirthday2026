@@ -16,6 +16,7 @@ export const birthdayCalculationsService = {
     const hebAge = this.calculateCurrentHebrewAge(
       birthday.hebrew_year || 0,
       birthday.next_upcoming_hebrew_birthday,
+      birthday.next_upcoming_hebrew_year,
       referenceDate,
       currentHebrewYear
     );
@@ -81,6 +82,7 @@ export const birthdayCalculationsService = {
   calculateCurrentHebrewAge(
     hebrewBirthYear: number,
     nextHebrewBirthdayStr: string | null | undefined,
+    nextUpcomingHebrewYear: number | null | undefined,
     today: Date = new Date(),
     currentHebrewYear?: number
   ): { age: number; hasBirthdayPassedThisYear: boolean } {
@@ -95,10 +97,15 @@ export const birthdayCalculationsService = {
 
     const hasPassed = nextBirthday <= todayCopy;
 
+    // Use next_upcoming_hebrew_year if available (most accurate from API)
+    // Otherwise fall back to currentHebrewYear from tenant
     let hebrewYearToUse: number;
-    if (currentHebrewYear) {
+    if (nextUpcomingHebrewYear) {
+      hebrewYearToUse = nextUpcomingHebrewYear;
+    } else if (currentHebrewYear) {
       hebrewYearToUse = currentHebrewYear;
     } else {
+      // Last resort fallback - this should rarely be reached
       const currentGregorianYear = today.getFullYear();
       hebrewYearToUse = hebrewBirthYear + Math.floor((currentGregorianYear - 1970) * 1.0307);
     }
