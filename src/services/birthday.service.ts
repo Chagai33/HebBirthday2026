@@ -178,6 +178,7 @@ export const birthdayService = {
       gender: data.gender,
       birth_date_hebrew_string: data.birth_date_hebrew_string,
       next_upcoming_hebrew_birthday: data.next_upcoming_hebrew_birthday,
+      next_upcoming_hebrew_year: data.next_upcoming_hebrew_year,
       future_hebrew_birthdays: data.future_hebrew_birthdays || [],
       gregorian_year: data.gregorian_year,
       gregorian_month: data.gregorian_month,

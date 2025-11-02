@@ -84,14 +84,6 @@ export const birthdayCalculationsService = {
   ): { age: number; hasBirthdayPassedThisYear: boolean } {
     // If missing critical data, return 0
     if (!hebrewBirthYear || !nextHebrewBirthdayStr || !nextUpcomingHebrewYear) {
-      console.error('⚠️ Missing Hebrew birthday data:', {
-        hebrewBirthYear,
-        nextHebrewBirthdayStr,
-        nextUpcomingHebrewYear,
-        hasBirthYear: !!hebrewBirthYear,
-        hasBirthdayStr: !!nextHebrewBirthdayStr,
-        hasUpcomingYear: !!nextUpcomingHebrewYear
-      });
       return { age: 0, hasBirthdayPassedThisYear: false };
     }
 

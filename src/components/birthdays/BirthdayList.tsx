@@ -46,13 +46,6 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 
   const enrichedBirthdays = useMemo(() => {
     return birthdays.map((birthday) => {
-      console.log('🔍 Birthday data from server:', {
-        id: birthday.id,
-        name: birthday.name,
-        hebrew_year: birthday.hebrew_year,
-        next_upcoming_hebrew_year: birthday.next_upcoming_hebrew_year,
-        next_upcoming_hebrew_birthday: birthday.next_upcoming_hebrew_birthday
-      });
       const calculations = birthdayCalculationsService.calculateAll(
         birthday,
         new Date()
