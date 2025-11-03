@@ -219,90 +219,92 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
             placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full ps-9 sm:ps-10 pe-3 sm:pe-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
-        <button
-          onClick={() => setShowGroupFilter(!showGroupFilter)}
-          className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            selectedGroupIds.length > 0 || genderFilter !== 'all'
-              ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          <Filter className="w-4 h-4" />
-          {t('common.filters', 'Filters')}
-          {(selectedGroupIds.length > 0 || genderFilter !== 'all') && (
-            <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
-              {selectedGroupIds.length + (genderFilter !== 'all' ? 1 : 0)}
-            </span>
-          )}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowGroupFilter(!showGroupFilter)}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg font-medium transition-colors flex items-center gap-1.5 sm:gap-2 text-sm whitespace-nowrap ${
+              selectedGroupIds.length > 0 || genderFilter !== 'all'
+                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('common.filters', 'Filters')}</span>
+            {(selectedGroupIds.length > 0 || genderFilter !== 'all') && (
+              <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-bold">
+                {selectedGroupIds.length + (genderFilter !== 'all' ? 1 : 0)}
+              </span>
+            )}
+          </button>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="upcoming">{t('sort.upcomingSoonest', 'Next Birthday (Soonest)')}</option>
-          <option value="upcoming-latest">{t('sort.upcomingLatest', 'Next Birthday (Latest)')}</option>
-          <option value="name-az">{t('sort.nameAZ', 'Name (A-Z)')}</option>
-          <option value="name-za">{t('sort.nameZA', 'Name (Z-A)')}</option>
-          <option value="birthday-oldest">{t('sort.birthdayOldest', 'Birthday (Oldest)')}</option>
-          <option value="birthday-newest">{t('sort.birthdayNewest', 'Birthday (Newest)')}</option>
-          <option value="age-youngest">{t('sort.ageYoungest', 'Age (Youngest)')}</option>
-          <option value="age-oldest">{t('sort.ageOldest', 'Age (Oldest)')}</option>
-        </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-2 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="upcoming">{t('sort.upcomingSoonest', 'Next Birthday (Soonest)')}</option>
+            <option value="upcoming-latest">{t('sort.upcomingLatest', 'Next Birthday (Latest)')}</option>
+            <option value="name-az">{t('sort.nameAZ', 'Name (A-Z)')}</option>
+            <option value="name-za">{t('sort.nameZA', 'Name (Z-A)')}</option>
+            <option value="birthday-oldest">{t('sort.birthdayOldest', 'Birthday (Oldest)')}</option>
+            <option value="birthday-newest">{t('sort.birthdayNewest', 'Birthday (Newest)')}</option>
+            <option value="age-youngest">{t('sort.ageYoungest', 'Age (Youngest)')}</option>
+            <option value="age-oldest">{t('sort.ageOldest', 'Age (Oldest)')}</option>
+          </select>
+        </div>
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-blue-900">
+              <span className="font-semibold text-blue-900 text-sm">
                 {selectedIds.size} {t('common.selected')}
               </span>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 underline"
               >
                 {t('common.clear')}
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               <button
                 onClick={() => handleBulkDelete()}
-                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1"
               >
-                <Trash2 className="w-4 h-4" />
-                {t('common.delete')}
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t('common.delete')}</span>
               </button>
               <button
                 onClick={() => handleBulkRefresh()}
-                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1"
               >
-                <RefreshCw className="w-4 h-4" />
-                {t('birthday.refresh')}
+                <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t('birthday.refresh')}</span>
               </button>
               <button
                 onClick={() => {
                   const selectedBirthdays = birthdays.filter(b => selectedIds.has(b.id));
                   exportBirthdaysToCSV(selectedBirthdays, `birthdays-${new Date().toISOString().split('T')[0]}.csv`, i18n.language);
                 }}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1"
               >
-                <Download className="w-4 h-4" />
-                {t('birthday.exportSelected')}
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t('birthday.exportSelected')}</span>
               </button>
             </div>
           </div>
@@ -310,7 +312,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
       )}
 
       {showGroupFilter && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 space-y-3 sm:space-y-4">
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -444,12 +446,12 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-md border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-start">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start">
                   <input
                     type="checkbox"
                     checked={
@@ -457,31 +459,31 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                       filteredAndSortedBirthdays.length > 0
                     }
                     onChange={toggleSelectAll}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.firstName')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.lastName')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.birthDate')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.currentGregorianAge')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.currentHebrewAge')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.nextGregorianBirthday')}
                 </th>
-                <th className="px-6 py-4 text-start text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-start text-xs sm:text-sm font-bold text-gray-900">
                   {t('birthday.nextHebrewBirthday')}
                 </th>
-                <th className="px-6 py-4 text-end text-sm font-bold text-gray-900">
+                <th className="px-2 sm:px-6 py-2 sm:py-4 text-end text-xs sm:text-sm font-bold text-gray-900">
                   {t('common.actions')}
                 </th>
               </tr>
@@ -508,82 +510,82 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         borderRight: birthday.group ? `4px solid ${birthday.group.color}` : undefined,
                       }}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-2 sm:px-6 py-2 sm:py-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(birthday.id)}
                           onChange={() => toggleSelect(birthday.id)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-2 sm:px-6 py-2 sm:py-4">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
                           {birthday.group ? (
                             <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0"
                               style={{ backgroundColor: `${birthday.group.color}20` }}
                               title={birthday.group.name}
                             >
                               <div
-                                className="w-3 h-3 rounded-full"
+                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
                                 style={{ backgroundColor: birthday.group.color }}
                               />
                             </div>
                           ) : (
                             <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 border-2 border-dashed border-gray-300"
+                              className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 border border-dashed border-gray-300"
                               title={t('birthday.unassigned', 'ללא שיוך')}
                             >
-                              <span className="text-xs text-gray-400">?</span>
+                              <span className="text-[10px] sm:text-xs text-gray-400">?</span>
                             </div>
                           )}
-                          <span className="text-sm font-medium text-gray-900">{birthday.first_name}</span>
+                          <span className="text-xs sm:text-sm font-medium text-gray-900">{birthday.first_name}</span>
                         </div>
                       </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">
                       {birthday.last_name}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      <div className="flex flex-col gap-1">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
+                      <div className="flex flex-col gap-0.5 sm:gap-1">
                         <span>{format(new Date(birthday.birth_date_gregorian), 'dd/MM/yyyy', { locale })}</span>
                         {birthday.birth_date_hebrew_string && (
-                          <span className="text-xs text-gray-500">{birthday.birth_date_hebrew_string}</span>
+                          <span className="text-[10px] sm:text-xs text-gray-500">{birthday.birth_date_hebrew_string}</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold">
                       {showGregorian ? (
                         <span className="text-blue-600">{birthday.calculations.currentGregorianAge}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold">
                       {showHebrew ? (
                         <span className="text-purple-600">{birthday.calculations.currentHebrewAge}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                       {showGregorian ? (
                         <button
                           onClick={() => {
                             setSelectedBirthday(birthday);
                             setShowGregorianModal(true);
                           }}
-                          className="flex flex-col gap-1 text-start hover:bg-blue-50 p-2 rounded transition-colors"
+                          className="flex flex-col gap-0.5 sm:gap-1 text-start hover:bg-blue-50 p-1 sm:p-2 rounded transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="w-4 h-4 text-blue-600" />
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                             <span className="font-medium">
                               {format(birthday.calculations.nextGregorianBirthday, 'dd/MM/yyyy', { locale })}
                             </span>
                           </div>
-                          <span className="text-xs text-blue-600">
+                          <span className="text-[10px] sm:text-xs text-blue-600">
                             {t('birthday.ageAtNextGregorian')}: {birthday.calculations.ageAtNextGregorianBirthday}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-[10px] sm:text-xs text-gray-500">
                             ({birthday.calculations.daysUntilGregorianBirthday} {t('birthday.days')})
                           </span>
                         </button>
@@ -591,26 +593,26 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                       {showHebrew && birthday.calculations.nextHebrewBirthday ? (
                         <button
                           onClick={() => {
                             setSelectedBirthday(birthday);
                             setShowFutureModal(true);
                           }}
-                          className="flex flex-col gap-1 text-start hover:bg-purple-50 p-2 rounded transition-colors"
+                          className="flex flex-col gap-0.5 sm:gap-1 text-start hover:bg-purple-50 p-1 sm:p-2 rounded transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="w-4 h-4 text-purple-600" />
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" />
                             <span className="font-medium">
                               {format(birthday.calculations.nextHebrewBirthday, 'dd/MM/yyyy', { locale })}
                             </span>
                           </div>
-                          <span className="text-xs text-purple-600">
+                          <span className="text-[10px] sm:text-xs text-purple-600">
                             {t('birthday.ageAtNextHebrew')}: {birthday.calculations.ageAtNextHebrewBirthday}
                           </span>
                           {birthday.calculations.daysUntilHebrewBirthday !== null && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-[10px] sm:text-xs text-gray-500">
                               ({birthday.calculations.daysUntilHebrewBirthday} {t('birthday.days', 'days')})
                             </span>
                           )}
@@ -619,59 +621,59 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4">
+                      <div className="flex items-center justify-end gap-0.5 sm:gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => {
                             setSelectedBirthday(birthday);
                             setShowWishlistModal(true);
                           }}
-                          className="p-2 text-pink-600 hover:bg-pink-100 rounded-lg transition-all hover:scale-110"
+                          className="p-1 sm:p-2 text-pink-600 hover:bg-pink-100 rounded-lg transition-all hover:scale-110"
                           title={t('wishlist.title', 'רשימת משאלות')}
                         >
-                          <Gift className="w-4 h-4" />
+                          <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => handleRefresh(birthday.id)}
                           disabled={refreshHebrewData.isPending}
-                          className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-1 sm:p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                           title={t('birthday.refresh', 'רענן תאריכים עבריים')}
                         >
-                          <RefreshCw className={`w-4 h-4 ${refreshHebrewData.isPending ? 'animate-spin' : ''}`} />
+                          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshHebrewData.isPending ? 'animate-spin' : ''}`} />
                         </button>
                         {onAddToCalendar && (
                           <button
                             onClick={() => onAddToCalendar(birthday)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all hover:scale-110"
+                            className="p-1 sm:p-2 text-green-600 hover:bg-green-100 rounded-lg transition-all hover:scale-110"
                             title={t('birthday.addToCalendar')}
                           >
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         )}
                         {!birthday.group_id && (
                           <button
                             onClick={() => onEdit(birthday)}
-                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all hover:scale-110 animate-pulse"
+                            className="p-1 sm:p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-all hover:scale-110 animate-pulse"
                             title={t('birthday.reassign', 'שייך לקבוצה')}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         )}
                         {birthday.group_id && (
                           <button
                             onClick={() => onEdit(birthday)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all hover:scale-110"
+                            className="p-1 sm:p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all hover:scale-110"
                             title={t('common.edit')}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(birthday.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all hover:scale-110"
+                          className="p-1 sm:p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all hover:scale-110"
                           title={t('common.delete')}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     </td>
