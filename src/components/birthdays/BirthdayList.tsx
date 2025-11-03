@@ -375,6 +375,16 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
+                  onClick={clearGroupFilters}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                    selectedGroupIds.length === 0
+                      ? 'bg-gray-600 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  {t('filter.all', 'All')}
+                </button>
+                <button
                   onClick={() => toggleGroupFilter('unassigned')}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-2 ${
                     selectedGroupIds.includes('unassigned')
