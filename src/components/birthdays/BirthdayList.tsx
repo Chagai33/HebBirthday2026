@@ -338,7 +338,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                 {t('filter.all', 'All')}
               </button>
               <button
-                onClick={() => setGenderFilter('male')}
+                onClick={() => setGenderFilter(genderFilter === 'male' ? 'all' : 'male')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
                   genderFilter === 'male'
                     ? 'bg-blue-600 border-blue-600 text-white'
@@ -348,7 +348,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                 {t('filter.male', 'Male')}
               </button>
               <button
-                onClick={() => setGenderFilter('female')}
+                onClick={() => setGenderFilter(genderFilter === 'female' ? 'all' : 'female')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
                   genderFilter === 'female'
                     ? 'bg-pink-600 border-pink-600 text-white'
@@ -385,7 +385,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
                   <div className="w-3 h-3 rounded-full border-2 border-dashed border-gray-400" />
                   {t('birthday.unassigned', 'ללא שיוך')}
                 </button>
-                {groups.map((group) => (
+                {groups.filter(g => !g.is_root).map((group) => (
                   <button
                     key={group.id}
                     onClick={() => toggleGroupFilter(group.id)}
