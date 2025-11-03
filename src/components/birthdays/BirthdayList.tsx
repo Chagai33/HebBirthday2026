@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Birthday } from '../../types';
 import { format } from 'date-fns';
@@ -7,7 +7,7 @@ import { useDeleteBirthday, useRefreshHebrewData } from '../../hooks/useBirthday
 import { useGroups } from '../../hooks/useGroups';
 import { useGroupFilter } from '../../contexts/GroupFilterContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift, Download } from 'lucide-react';
+import { Edit, Trash2, Calendar, Search, CalendarDays, RefreshCw, Filter, Gift, Download, Users } from 'lucide-react';
 import { FutureBirthdaysModal } from '../modals/FutureBirthdaysModal';
 import { UpcomingGregorianBirthdaysModal } from '../modals/UpcomingGregorianBirthdaysModal';
 import { WishlistModal } from '../modals/WishlistModal';
@@ -33,14 +33,27 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
   const { currentTenant } = useTenant();
   const { selectedGroupIds, toggleGroupFilter, clearGroupFilters } = useGroupFilter();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'upcoming'>('upcoming');
+  const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('birthday-search') || '');
+  const [sortBy, setSortBy] = useState<'upcoming' | 'upcoming-latest' | 'name-az' | 'name-za' | 'birthday-oldest' | 'birthday-newest' | 'age-youngest' | 'age-oldest'>(() => (localStorage.getItem('birthday-sort') as any) || 'upcoming');
+  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>(() => (localStorage.getItem('birthday-gender') as any) || 'all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showFutureModal, setShowFutureModal] = useState(false);
   const [showGregorianModal, setShowGregorianModal] = useState(false);
   const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
   const [showGroupFilter, setShowGroupFilter] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('birthday-search', searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    localStorage.setItem('birthday-sort', sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    localStorage.setItem('birthday-gender', genderFilter);
+  }, [genderFilter]);
 
   const locale = i18n.language === 'he' ? he : enUS;
 
@@ -76,6 +89,10 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
       });
     }
 
+    if (genderFilter !== 'all') {
+      filtered = filtered.filter((b) => b.gender === genderFilter);
+    }
+
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -87,12 +104,22 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
 
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case 'name':
+        case 'name-az':
           return `${a.first_name} ${a.last_name}`.localeCompare(
             `${b.first_name} ${b.last_name}`
           );
-        case 'date':
+        case 'name-za':
+          return `${b.first_name} ${b.last_name}`.localeCompare(
+            `${a.first_name} ${a.last_name}`
+          );
+        case 'birthday-oldest':
           return new Date(a.birth_date_gregorian).getTime() - new Date(b.birth_date_gregorian).getTime();
+        case 'birthday-newest':
+          return new Date(b.birth_date_gregorian).getTime() - new Date(a.birth_date_gregorian).getTime();
+        case 'age-youngest':
+          return a.calculations.currentGregorianAge - b.calculations.currentGregorianAge;
+        case 'age-oldest':
+          return b.calculations.currentGregorianAge - a.calculations.currentGregorianAge;
         case 'upcoming':
           const aNext = calendarPreferenceService.getNextRelevantBirthday(
             a.calculations,
@@ -103,13 +130,23 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
             b.effectivePreference
           );
           return aNext.getTime() - bNext.getTime();
+        case 'upcoming-latest':
+          const aNextLatest = calendarPreferenceService.getNextRelevantBirthday(
+            a.calculations,
+            a.effectivePreference
+          );
+          const bNextLatest = calendarPreferenceService.getNextRelevantBirthday(
+            b.calculations,
+            b.effectivePreference
+          );
+          return bNextLatest.getTime() - aNextLatest.getTime();
         default:
           return 0;
       }
     });
 
     return sorted;
-  }, [enrichedBirthdays, searchTerm, sortBy, selectedGroupIds]);
+  }, [enrichedBirthdays, searchTerm, sortBy, selectedGroupIds, genderFilter]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete', 'Are you sure?'))) {
@@ -198,16 +235,16 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         <button
           onClick={() => setShowGroupFilter(!showGroupFilter)}
           className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            selectedGroupIds.length > 0
+            selectedGroupIds.length > 0 || genderFilter !== 'all'
               ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
           }`}
         >
           <Filter className="w-4 h-4" />
-          {t('groups.filterByGroup')}
-          {selectedGroupIds.length > 0 && (
+          {t('common.filters', 'Filters')}
+          {(selectedGroupIds.length > 0 || genderFilter !== 'all') && (
             <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
-              {selectedGroupIds.length}
+              {selectedGroupIds.length + (genderFilter !== 'all' ? 1 : 0)}
             </span>
           )}
         </button>
@@ -217,9 +254,14 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           onChange={(e) => setSortBy(e.target.value as any)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value="upcoming">{t('birthday.upcomingBirthdays')}</option>
-          <option value="name">{t('common.sortByName', 'Sort by Name')}</option>
-          <option value="date">{t('common.sortByDate', 'Sort by Date')}</option>
+          <option value="upcoming">{t('sort.upcomingSoonest', 'Next Birthday (Soonest)')}</option>
+          <option value="upcoming-latest">{t('sort.upcomingLatest', 'Next Birthday (Latest)')}</option>
+          <option value="name-az">{t('sort.nameAZ', 'Name (A-Z)')}</option>
+          <option value="name-za">{t('sort.nameZA', 'Name (Z-A)')}</option>
+          <option value="birthday-oldest">{t('sort.birthdayOldest', 'Birthday (Oldest)')}</option>
+          <option value="birthday-newest">{t('sort.birthdayNewest', 'Birthday (Newest)')}</option>
+          <option value="age-youngest">{t('sort.ageYoungest', 'Age (Youngest)')}</option>
+          <option value="age-oldest">{t('sort.ageOldest', 'Age (Oldest)')}</option>
         </select>
       </div>
 
@@ -267,54 +309,107 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
         </div>
       )}
 
-      {showGroupFilter && groups.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">{t('groups.filterByGroup')}</h3>
-            {selectedGroupIds.length > 0 && (
+      {showGroupFilter && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                {t('filter.gender', 'Gender')}
+              </h3>
+              {genderFilter !== 'all' && (
+                <button
+                  onClick={() => setGenderFilter('all')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  {t('common.clear', 'Clear')}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
               <button
-                onClick={clearGroupFilters}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                {t('common.clear', 'Clear')}
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => toggleGroupFilter('unassigned')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-2 ${
-                selectedGroupIds.includes('unassigned')
-                  ? 'bg-gray-200 border-gray-400 text-gray-900'
-                  : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              <div className="w-3 h-3 rounded-full border-2 border-dashed border-gray-400" />
-              {t('birthday.unassigned', 'ללא שיוך')}
-            </button>
-            {groups.map((group) => (
-              <button
-                key={group.id}
-                onClick={() => toggleGroupFilter(group.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  selectedGroupIds.includes(group.id)
-                    ? 'ring-2 ring-offset-1'
-                    : 'opacity-70 hover:opacity-100'
+                onClick={() => setGenderFilter('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                  genderFilter === 'all'
+                    ? 'bg-gray-600 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
                 }`}
-                style={{
-                  backgroundColor: selectedGroupIds.includes(group.id) ? group.color : group.color + '40',
-                  color: selectedGroupIds.includes(group.id) ? 'white' : group.color,
-                  ringColor: group.color,
-                }}
               >
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: selectedGroupIds.includes(group.id) ? 'white' : group.color }}
-                />
-                {group.name}
+                {t('filter.all', 'All')}
               </button>
-            ))}
+              <button
+                onClick={() => setGenderFilter('male')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                  genderFilter === 'male'
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white border-blue-300 text-blue-600 hover:border-blue-400'
+                }`}
+              >
+                {t('filter.male', 'Male')}
+              </button>
+              <button
+                onClick={() => setGenderFilter('female')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                  genderFilter === 'female'
+                    ? 'bg-pink-600 border-pink-600 text-white'
+                    : 'bg-white border-pink-300 text-pink-600 hover:border-pink-400'
+                }`}
+              >
+                {t('filter.female', 'Female')}
+              </button>
+            </div>
           </div>
+
+          {groups.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900">{t('groups.filterByGroup')}</h3>
+                {selectedGroupIds.length > 0 && (
+                  <button
+                    onClick={clearGroupFilters}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    {t('common.clear', 'Clear')}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => toggleGroupFilter('unassigned')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-2 ${
+                    selectedGroupIds.includes('unassigned')
+                      ? 'bg-gray-200 border-gray-400 text-gray-900'
+                      : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="w-3 h-3 rounded-full border-2 border-dashed border-gray-400" />
+                  {t('birthday.unassigned', 'ללא שיוך')}
+                </button>
+                {groups.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => toggleGroupFilter(group.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                      selectedGroupIds.includes(group.id)
+                        ? 'ring-2 ring-offset-1'
+                        : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      backgroundColor: selectedGroupIds.includes(group.id) ? group.color : group.color + '40',
+                      color: selectedGroupIds.includes(group.id) ? 'white' : group.color,
+                      ringColor: group.color,
+                    }}
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: selectedGroupIds.includes(group.id) ? 'white' : group.color }}
+                    />
+                    {group.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

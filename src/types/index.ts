@@ -154,8 +154,8 @@ export interface DashboardStats {
 export interface BirthdayFilter {
   searchTerm?: string;
   groupIds?: string[];
-  gender?: Gender;
-  sortBy?: 'name' | 'date' | 'upcoming';
+  gender?: Gender | 'all';
+  sortBy?: 'upcoming' | 'upcoming-latest' | 'name-az' | 'name-za' | 'birthday-oldest' | 'birthday-newest' | 'age-youngest' | 'age-oldest';
 }
 
 export interface BirthdayCalculations {

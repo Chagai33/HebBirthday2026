@@ -7,6 +7,7 @@
     "add": "הוסף",
     "search": "חיפוש",
     "filter": "סינון",
+    "filters": "פילטרים",
     "close": "סגור",
     "confirm": "אשר",
     "loading": "טוען...",
@@ -62,6 +63,22 @@
     "settings": "הגדרות",
     "defaultCalendarPreference": "העדפת לוח שנה ברירת מחדל",
     "preferenceDescription": "זה משפיע על אופן הצגת ימי ההולדת במערכת"
+  },
+  "sort": {
+    "upcomingSoonest": "יום הולדת הבא (הקרוב ביותר)",
+    "upcomingLatest": "יום הולדת הבא (הרחוק ביותר)",
+    "nameAZ": "שם (א-ת)",
+    "nameZA": "שם (ת-א)",
+    "birthdayOldest": "תאריך לידה (הישן ביותר)",
+    "birthdayNewest": "תאריך לידה (החדש ביותר)",
+    "ageYoungest": "גיל (הצעיר ביותר)",
+    "ageOldest": "גיל (המבוגר ביותר)"
+  },
+  "filter": {
+    "gender": "מגדר",
+    "all": "הכל",
+    "male": "גברים",
+    "female": "נשים"
   },
   "birthday": {
     "birthdays": "ימי הולדת",

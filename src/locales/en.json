@@ -7,6 +7,7 @@
     "add": "Add",
     "search": "Search",
     "filter": "Filter",
+    "filters": "Filters",
     "close": "Close",
     "confirm": "Confirm",
     "loading": "Loading...",
@@ -62,6 +63,22 @@
     "settings": "Settings",
     "defaultCalendarPreference": "Default Calendar Preference",
     "preferenceDescription": "This affects how birthdays are displayed throughout the system"
+  },
+  "sort": {
+    "upcomingSoonest": "Next Birthday (Soonest)",
+    "upcomingLatest": "Next Birthday (Latest)",
+    "nameAZ": "Name (A-Z)",
+    "nameZA": "Name (Z-A)",
+    "birthdayOldest": "Birthday (Oldest)",
+    "birthdayNewest": "Birthday (Newest)",
+    "ageYoungest": "Age (Youngest)",
+    "ageOldest": "Age (Oldest)"
+  },
+  "filter": {
+    "gender": "Gender",
+    "all": "All",
+    "male": "Males",
+    "female": "Females"
   },
   "birthday": {
     "birthdays": "Birthdays",
