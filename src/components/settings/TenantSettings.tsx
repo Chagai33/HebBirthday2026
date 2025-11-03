@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../contexts/TenantContext';
@@ -33,7 +34,7 @@ export const TenantSettings: React.FC<TenantSettingsProps> = ({ onClose }) => {
       setTimeout(() => onClose(), 1000);
     } catch (err) {
       error(t('common.error'));
-      console.error('Error updating tenant settings:', err);
+      logger.error('Error updating tenant settings:', err);
     } finally {
       setIsSaving(false);
     }

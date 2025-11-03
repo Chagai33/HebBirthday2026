@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -97,7 +98,7 @@ export const BirthdayForm = ({
       onClose();
     } catch (error) {
       showError(t('common.error'));
-      console.error('Error saving birthday:', error);
+      logger.error('Error saving birthday:', error);
     }
   };
 
@@ -194,7 +195,7 @@ export const BirthdayForm = ({
       setSelectedParentGroup('');
       showSuccess(t('messages.groupCreated', 'Group created successfully'));
     } catch (error) {
-      console.error('Error creating group:', error);
+      logger.error('Error creating group:', error);
       showError(t('common.error'));
     }
   };

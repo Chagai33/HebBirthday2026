@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -120,7 +121,7 @@ export const GroupsPanel = () => {
       handleCloseForm();
     } catch (err) {
       error(t('common.error'));
-      console.error('Error saving group:', err);
+      logger.error('Error saving group:', err);
     }
   };
 
@@ -131,7 +132,7 @@ export const GroupsPanel = () => {
       setDeletingGroup({ id: group.id, name: group.name });
     } catch (err) {
       error(t('common.error'));
-      console.error('Error getting birthdays count:', err);
+      logger.error('Error getting birthdays count:', err);
     }
   };
 
@@ -147,7 +148,7 @@ export const GroupsPanel = () => {
       setDeletingGroup(null);
     } catch (err) {
       error(t('common.error'));
-      console.error('Error deleting group:', err);
+      logger.error('Error deleting group:', err);
     }
   };
 

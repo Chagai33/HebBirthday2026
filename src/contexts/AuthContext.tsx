@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { authService } from '../services/auth.service';
 import { AppUser, AuthContextType } from '../types';
+import { logger } from '../utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -34,14 +35,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const maxRetries = 10;
 
           while (!tokenResult.claims.tenantId && retries < maxRetries) {
-            console.warn(`Waiting for Custom Claims (${retries + 1}/${maxRetries})...`);
+            logger.warn(`Waiting for Custom Claims (${retries + 1}/${maxRetries})...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
             tokenResult = await firebaseUser.getIdTokenResult(true);
             retries++;
           }
 
           if (!tokenResult.claims.tenantId) {
-            console.error('Custom Claims not set after multiple retries, signing out');
+            logger.error('Custom Claims not set after multiple retries, signing out');
             await authService.signOut();
             setUser(null);
             setLoading(false);
@@ -52,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           retries = 0;
 
           while (!currentUser && retries < maxRetries) {
-            console.warn(`User profile not found, retrying (${retries + 1}/${maxRetries})...`);
+            logger.warn(`User profile not found, retrying (${retries + 1}/${maxRetries})...`);
             await new Promise(resolve => setTimeout(resolve, 500));
             currentUser = await authService.getCurrentUser();
             retries++;
@@ -61,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (currentUser) {
             setUser(currentUser);
           } else {
-            console.error('User profile not found after multiple retries, signing out');
+            logger.error('User profile not found after multiple retries, signing out');
             await authService.signOut();
             setUser(null);
           }
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        logger.error('Error loading user data:', error);
         setUser(null);
       } finally {
         setLoading(false);

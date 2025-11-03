@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Upload, FileText, Users, Plus, FolderPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -100,7 +101,7 @@ export const CSVImportPreviewModal = ({
       await onConfirm(rowsToImport, defaultGroupId);
       onClose();
     } catch (error) {
-      console.error('Import failed:', error);
+      logger.error('Import failed:', error);
     } finally {
       setIsImporting(false);
     }
@@ -119,7 +120,7 @@ export const CSVImportPreviewModal = ({
       setSelectedParentGroup('');
       setShowGroupCreator(false);
     } catch (error) {
-      console.error('Failed to create group:', error);
+      logger.error('Failed to create group:', error);
       alert(t('common.error'));
     }
   };

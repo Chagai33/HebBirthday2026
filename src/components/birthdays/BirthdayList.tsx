@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Birthday } from '../../types';
@@ -195,7 +196,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
       await Promise.all(deletePromises);
       setSelectedIds(new Set());
     } catch (error) {
-      console.error('Error deleting birthdays:', error);
+      logger.error('Error deleting birthdays:', error);
     }
   };
 
@@ -211,7 +212,7 @@ export const BirthdayList: React.FC<BirthdayListProps> = ({
           gender: birthday.gender,
         });
       } catch (error) {
-        console.error('Error refreshing birthday:', birthday.id, error);
+        logger.error('Error refreshing birthday:', birthday.id, error);
       }
     }
 

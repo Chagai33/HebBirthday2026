@@ -15,6 +15,7 @@ import {
 import { db } from '../config/firebase';
 import { Group, GroupType } from '../types';
 import { retryFirestoreOperation } from './firestore.retry';
+import { logger } from '../utils/logger';
 
 const ROOT_GROUPS = [
   { type: 'family' as GroupType, nameHe: 'משפחה', nameEn: 'Family', color: '#3b82f6' },
@@ -27,7 +28,7 @@ export const groupService = {
 
   async initializeRootGroups(tenantId: string, userId: string, language: 'he' | 'en' = 'he'): Promise<void> {
     if (this.isInitializing) {
-      console.log('Already initializing root groups, skipping...');
+      logger.log('Already initializing root groups, skipping...');
       return;
     }
 
@@ -35,12 +36,12 @@ export const groupService = {
       const existingRoots = await this.getRootGroups(tenantId);
 
       if (existingRoots.length >= 3) {
-        console.log('Root groups already exist, skipping initialization');
+        logger.log('Root groups already exist, skipping initialization');
         return;
       }
 
       if (this.isInitializing) {
-        console.log('Another initialization is in progress, skipping...');
+        logger.log('Another initialization is in progress, skipping...');
         return;
       }
 
@@ -51,7 +52,7 @@ export const groupService = {
         const groupsToCreate = ROOT_GROUPS.filter(root => !existingTypes.has(root.type));
 
         if (groupsToCreate.length === 0) {
-          console.log('All root groups already exist');
+          logger.log('All root groups already exist');
           return;
         }
 
@@ -70,7 +71,7 @@ export const groupService = {
         );
 
         await Promise.all(promises);
-        console.log('Root groups initialized successfully');
+        logger.log('Root groups initialized successfully');
       } finally {
         this.isInitializing = false;
       }

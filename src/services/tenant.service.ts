@@ -13,6 +13,7 @@ import {
 import { db } from '../config/firebase';
 import { Tenant, UserRole } from '../types';
 import { groupService } from './group.service';
+import { logger } from '../utils/logger';
 
 export const tenantService = {
   async createTenant(name: string, ownerId: string, language: 'he' | 'en' = 'he'): Promise<string> {
@@ -122,7 +123,7 @@ export const tenantService = {
     role: UserRole,
     invitedBy: string
   ): Promise<void> {
-    console.log('Invite user to tenant:', { email, tenantId, role, invitedBy });
+    logger.log('Invite user to tenant:', { email, tenantId, role, invitedBy });
   },
 
   async addUserToTenant(userId: string, tenantId: string, role: UserRole): Promise<void> {

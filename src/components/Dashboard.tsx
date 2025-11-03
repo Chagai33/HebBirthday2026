@@ -19,6 +19,7 @@ import { birthdayService } from '../services/birthday.service';
 import { validateAndEnrichCSVData } from '../utils/csvValidation';
 import { CSVImportPreviewModal } from './modals/CSVImportPreviewModal';
 import { CSVBirthdayRow } from '../types';
+import { logger } from '../utils/logger';
 
 export const Dashboard = () => {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     if (currentTenant && user && !isLoadingGroups && rootGroups.length === 0 && !initializeRootGroups.isPending) {
-      console.log('Initializing root groups for tenant:', currentTenant.id);
+      logger.log('Initializing root groups for tenant:', currentTenant.id);
       initializeRootGroups.mutate(currentTenant.default_language || 'he');
     }
   }, [currentTenant?.id, user?.id, isLoadingGroups, rootGroups.length]);
@@ -85,13 +86,13 @@ export const Dashboard = () => {
       try {
         wishlist = await wishlistService.getItemsForBirthday(birthday.id, currentTenant?.id);
       } catch (wishlistError) {
-        console.warn('Could not load wishlist, continuing without it:', wishlistError);
+        logger.warn('Could not load wishlist, continuing without it:', wishlistError);
       }
 
       const language = currentTenant?.default_language || 'he';
       openGoogleCalendarForBirthday(birthday, language, wishlist);
     } catch (error) {
-      console.error('Error opening Google Calendar:', error);
+      logger.error('Error opening Google Calendar:', error);
       alert(t('messages.calendarError'));
     }
   };
@@ -122,7 +123,7 @@ export const Dashboard = () => {
       setCsvData(validatedData);
       setShowCSVPreview(true);
     } catch (error) {
-      console.error('Error parsing CSV:', error);
+      logger.error('Error parsing CSV:', error);
       alert(t('messages.importError', 'שגיאה בקריאת קובץ ה-CSV'));
     } finally {
       event.target.value = '';
@@ -153,7 +154,7 @@ export const Dashboard = () => {
         );
         imported++;
       } catch (error) {
-        console.error('Failed to import:', row, error);
+        logger.error('Failed to import:', row, error);
         failed++;
       }
     }

@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Plus, Edit, Trash2, Gift, Star, AlertCircle, CheckCircle } from 'lucide-react';
@@ -61,7 +62,7 @@ export const WishlistModal = ({ isOpen, onClose, birthday }: WishlistModalProps)
       setFormData({ itemName: '', description: '', priority: 'medium' });
       setIsAdding(false);
     } catch (error) {
-      console.error('Failed to save wishlist item:', error);
+      logger.error('Failed to save wishlist item:', error);
     }
   };
 

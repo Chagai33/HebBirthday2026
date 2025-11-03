@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 export async function retryFirestoreOperation<T>(
   operation: () => Promise<T>,
   maxRetries: number = 5,
@@ -16,7 +18,7 @@ export async function retryFirestoreOperation<T>(
         error?.message?.includes('Missing or insufficient permissions')
       ) {
         if (attempt < maxRetries) {
-          console.warn(
+          logger.warn(
             `Permission denied, retrying (${attempt + 1}/${maxRetries})...`
           );
           await new Promise((resolve) => setTimeout(resolve, delayMs));

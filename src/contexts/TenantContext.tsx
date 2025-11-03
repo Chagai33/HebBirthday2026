@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { tenantService } from '../services/tenant.service';
 import { Tenant, TenantContextType, UserRole } from '../types';
 import { useAuth } from './AuthContext';
+import { logger } from '../utils/logger';
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
@@ -38,14 +39,14 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
         const maxRetries = 10;
 
         while (tenants.length === 0 && retries < maxRetries) {
-          console.warn(`Waiting for tenant data (${retries + 1}/${maxRetries})...`);
+          logger.warn(`Waiting for tenant data (${retries + 1}/${maxRetries})...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           tenants = await tenantService.getUserTenants(user.id);
           retries++;
         }
 
         if (tenants.length === 0) {
-          console.error('No tenants found after multiple retries');
+          logger.error('No tenants found after multiple retries');
           setUserTenants([]);
           setCurrentTenant(null);
           setLoading(false);
@@ -66,7 +67,7 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
           setCurrentTenant(null);
         }
       } catch (error) {
-        console.error('Error loading tenants:', error);
+        logger.error('Error loading tenants:', error);
         setUserTenants([]);
         setCurrentTenant(null);
       } finally {
