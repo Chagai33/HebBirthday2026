@@ -29,7 +29,8 @@
     "creating": "יוצר...",
     "create": "צור",
     "developedBy": "פותח על ידי",
-    "back": "חזור"
+    "back": "חזור",
+    "version": "גרסה"
   },
   "auth": {
     "signIn": "התחבר",

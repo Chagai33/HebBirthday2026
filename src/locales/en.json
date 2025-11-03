@@ -29,7 +29,8 @@
     "creating": "Creating...",
     "create": "Create",
     "developedBy": "Developed by",
-    "back": "Back"
+    "back": "Back",
+    "version": "Version"
   },
   "auth": {
     "signIn": "Sign In",
