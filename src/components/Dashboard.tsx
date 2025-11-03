@@ -248,6 +248,12 @@ export const Dashboard = () => {
         <div className="space-y-3 sm:space-y-4">
           <div className="flex justify-end gap-1.5 sm:gap-2">
             <label className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md cursor-pointer text-sm">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVImport}
+                className="hidden"
+              />
               <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">{t('birthday.importCSV', 'Import CSV')}</span>
             </label>
