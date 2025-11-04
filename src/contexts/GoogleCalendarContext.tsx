@@ -4,7 +4,7 @@ import { googleCalendarService } from '../services/googleCalendar.service';
 import { useAuth } from './AuthContext';
 import { GoogleCalendarContextType, SyncResult, BulkSyncResult } from '../types';
 import { logger } from '../utils/logger';
-import { useToast } from '../hooks/useToast';
+import { useToast } from './ToastContext';
 
 const GoogleCalendarContext = createContext<GoogleCalendarContextType | undefined>(undefined);
 
