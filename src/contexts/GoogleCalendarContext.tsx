@@ -54,13 +54,19 @@ export const GoogleCalendarProvider: React.FC<GoogleCalendarProviderProps> = ({ 
   };
 
   const connectToGoogle = async () => {
+    setIsSyncing(true);
+
     try {
-      setIsSyncing(true);
       const code = await googleCalendarService.initiateGoogleOAuth();
+
+      if (!code) {
+        throw new Error('לא התקבל קוד אימות מ-Google');
+      }
+
       await googleCalendarService.exchangeAuthCode(code);
 
-      setIsConnected(true);
-      setLastSyncTime(new Date());
+      await refreshStatus();
+
       showToast('החיבור ליומן Google הושלם בהצלחה', 'success');
     } catch (error: any) {
       logger.error('Error connecting to Google Calendar:', error);

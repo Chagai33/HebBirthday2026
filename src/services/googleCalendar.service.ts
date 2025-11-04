@@ -153,6 +153,14 @@ export const googleCalendarService = {
 
   async getTokenStatus(userId: string): Promise<GoogleCalendarSyncStatus> {
     try {
+      if (!userId) {
+        return {
+          isConnected: false,
+          lastSyncTime: null,
+          syncedBirthdaysCount: 0
+        };
+      }
+
       const tokenDoc = await getDoc(doc(db, 'googleCalendarTokens', userId));
 
       if (!tokenDoc.exists()) {
@@ -171,8 +179,8 @@ export const googleCalendarService = {
         lastSyncTime: createdAt,
         syncedBirthdaysCount: 0
       };
-    } catch (error) {
-      logger.error('Error getting token status:', error);
+    } catch (error: any) {
+      logger.warn('Could not get token status (may not exist yet):', error?.message);
       return {
         isConnected: false,
         lastSyncTime: null,
