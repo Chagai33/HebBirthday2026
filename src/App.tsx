@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { GroupFilterProvider } from './contexts/GroupFilterContext';
+import { GoogleCalendarProvider } from './contexts/GoogleCalendarContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
@@ -25,31 +26,33 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TenantProvider>
-          <GroupFilterProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups"
-                  element={
-                    <ProtectedRoute>
-                      <GroupsPanel />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </BrowserRouter>
-          </GroupFilterProvider>
+          <GoogleCalendarProvider>
+            <GroupFilterProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/groups"
+                    element={
+                      <ProtectedRoute>
+                        <GroupsPanel />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </GroupFilterProvider>
+          </GoogleCalendarProvider>
         </TenantProvider>
       </AuthProvider>
     </QueryClientProvider>

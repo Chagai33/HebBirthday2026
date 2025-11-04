@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Layout } from './layout/Layout';
 import { BirthdayList } from './birthdays/BirthdayList';
 import { BirthdayForm } from './birthdays/BirthdayForm';
+import { GoogleCalendarButton } from './calendar/GoogleCalendarButton';
 import { useBirthdays } from '../hooks/useBirthdays';
 import { useTenant } from '../contexts/TenantContext';
 import { useGroupFilter } from '../contexts/GroupFilterContext';
@@ -247,6 +248,7 @@ export const Dashboard = () => {
 
         <div className="space-y-3 sm:space-y-4">
           <div className="flex justify-end gap-1.5 sm:gap-2">
+            <GoogleCalendarButton />
             <label className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md cursor-pointer text-sm">
               <input
                 type="file"
