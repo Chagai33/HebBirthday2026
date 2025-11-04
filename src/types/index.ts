@@ -17,6 +17,8 @@ export interface Tenant {
   default_calendar_preference?: CalendarPreference;
   current_hebrew_year?: number;
   hebrew_year_last_updated?: string;
+  sharedCalendarId?: string | null;
+  sharedCalendarName?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -81,6 +83,8 @@ export interface Birthday {
   calendar_preference_override?: CalendarPreference | null;
   notes?: string;
   archived: boolean;
+  googleCalendarEventId?: string | null;
+  lastSyncedAt?: string | null;
   created_at: string;
   created_by: string;
   updated_at: string;
@@ -195,4 +199,47 @@ export interface ValidationResult {
   errors: string[];
   warnings: string[];
   isDuplicate: boolean;
+}
+
+export interface GoogleCalendarToken {
+  id: string;
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  scope: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoogleCalendarSyncStatus {
+  isConnected: boolean;
+  lastSyncTime: string | null;
+  syncedBirthdaysCount: number;
+}
+
+export interface SyncResult {
+  success: boolean;
+  eventId?: string;
+  error?: string;
+  birthdayId: string;
+}
+
+export interface BulkSyncResult {
+  totalAttempted: number;
+  successCount: number;
+  failureCount: number;
+  results: SyncResult[];
+}
+
+export interface GoogleCalendarContextType {
+  isConnected: boolean;
+  lastSyncTime: Date | null;
+  isSyncing: boolean;
+  connectToGoogle: () => Promise<void>;
+  syncSingleBirthday: (birthdayId: string) => Promise<SyncResult>;
+  syncMultipleBirthdays: (birthdayIds: string[]) => Promise<BulkSyncResult>;
+  removeBirthdayFromCalendar: (birthdayId: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+  refreshStatus: () => Promise<void>;
 }

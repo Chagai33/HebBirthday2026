@@ -1,4 +1,22 @@
 {
+  "googleCalendar": {
+    "connect": "התחבר ליומן Google",
+    "connected": "מחובר ליומן Google",
+    "disconnect": "נתק חיבור",
+    "sync": "סנכרן",
+    "syncing": "מסנכרן...",
+    "synced": "מסונכרן",
+    "notSynced": "לא מסונכרן",
+    "remove": "הסר",
+    "lastSync": "סונכרן לאחרונה",
+    "syncAll": "סנכרן הכל ליומן Google",
+    "syncSuccess": "סונכרן בהצלחה",
+    "syncError": "שגיאה בסנכרון",
+    "connectFirst": "יש להתחבר ליומן Google תחילה",
+    "disconnectConfirm": "האם אתה בטוח שברצונך לנתק את החיבור ליומן Google?",
+    "syncingMultiple": "מסנכרן {count} ימי הולדת...",
+    "syncedCount": "סונכרנו {count} ימי הולדת בהצלחה"
+  },
   "common": {
     "save": "שמור",
     "cancel": "ביטול",

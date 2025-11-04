@@ -84,5 +84,11 @@ service cloud.firestore {
     match /rate_limits/{docId} {
       allow read, write: if isAuthenticated();
     }
+
+    match /googleCalendarTokens/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId &&
+                       request.resource.data.userId == userId;
+    }
   }
 }
