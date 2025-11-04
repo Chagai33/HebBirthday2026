@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
+import GoogleCallback from './components/auth/GoogleCallback';
 import { Dashboard } from './components/Dashboard';
 import { GroupsPanel } from './components/groups/GroupsPanel';
 import './config/i18n';
@@ -34,6 +35,14 @@ function App() {
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route
+                      path="/auth/google/callback"
+                      element={
+                        <ProtectedRoute>
+                          <GoogleCallback />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route
                       path="/"
                       element={

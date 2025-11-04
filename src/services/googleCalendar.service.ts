@@ -18,20 +18,12 @@ export const googleCalendarService = {
         const client = window.google.accounts.oauth2.initCodeClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/calendar.events',
-          ux_mode: 'popup',
-          callback: (response: any) => {
-            if (response.code) {
-              resolve(response.code);
-            } else if (response.error) {
-              reject(new Error(`שגיאת Google: ${response.error}`));
-            } else {
-              reject(new Error('לא התקבל קוד אימות מ-Google'));
-            }
-          },
-          error_callback: (error: any) => {
-            logger.error('Google OAuth error:', error);
-            reject(new Error('שגיאה באימות Google'));
-          }
+          ux_mode: 'redirect',
+          redirect_uri: window.location.origin + '/auth/google/callback',
+          state: JSON.stringify({
+            returnUrl: window.location.pathname,
+            timestamp: Date.now()
+          })
         });
 
         client.requestCode();

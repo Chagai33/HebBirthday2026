@@ -54,23 +54,22 @@ export const GoogleCalendarProvider: React.FC<GoogleCalendarProviderProps> = ({ 
   };
 
   const connectToGoogle = async () => {
-    setIsSyncing(true);
-
     try {
-      const code = await googleCalendarService.initiateGoogleOAuth();
-
-      if (!code) {
-        throw new Error('לא התקבל קוד אימות מ-Google');
-      }
-
-      await googleCalendarService.exchangeAuthCode(code);
-
-      await refreshStatus();
-
-      showToast('החיבור ליומן Google הושלם בהצלחה', 'success');
+      await googleCalendarService.initiateGoogleOAuth();
     } catch (error: any) {
       logger.error('Error connecting to Google Calendar:', error);
       showToast(error.message || 'שגיאה בחיבור ליומן Google', 'error');
+      throw error;
+    }
+  };
+
+  const exchangeAuthCode = async (code: string) => {
+    setIsSyncing(true);
+    try {
+      await googleCalendarService.exchangeAuthCode(code);
+      await refreshStatus();
+    } catch (error: any) {
+      logger.error('Error exchanging auth code:', error);
       throw error;
     } finally {
       setIsSyncing(false);
@@ -168,6 +167,7 @@ export const GoogleCalendarProvider: React.FC<GoogleCalendarProviderProps> = ({ 
     lastSyncTime,
     isSyncing,
     connectToGoogle,
+    exchangeAuthCode,
     syncSingleBirthday,
     syncMultipleBirthdays,
     removeBirthdayFromCalendar,

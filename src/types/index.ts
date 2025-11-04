@@ -237,6 +237,7 @@ export interface GoogleCalendarContextType {
   lastSyncTime: Date | null;
   isSyncing: boolean;
   connectToGoogle: () => Promise<void>;
+  exchangeAuthCode: (code: string) => Promise<void>;
   syncSingleBirthday: (birthdayId: string) => Promise<SyncResult>;
   syncMultipleBirthdays: (birthdayIds: string[]) => Promise<BulkSyncResult>;
   removeBirthdayFromCalendar: (birthdayId: string) => Promise<void>;
