@@ -784,6 +784,14 @@ export const exchangeGoogleAuthCode = functions.https.onCall(async (data, contex
     throw new functions.https.HttpsError('invalid-argument', 'קוד אימות חסר');
   }
 
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    functions.logger.error('Missing Google OAuth credentials', {
+      hasClientId: !!GOOGLE_CLIENT_ID,
+      hasClientSecret: !!GOOGLE_CLIENT_SECRET
+    });
+    throw new functions.https.HttpsError('failed-precondition', 'הגדרות Google OAuth חסרות. אנא צור קשר עם המפתח');
+  }
+
   const rateLimitRef = db.collection('rate_limits').doc(`${context.auth.uid}_google_auth`);
   const rateLimitDoc = await rateLimitRef.get();
 
@@ -808,9 +816,15 @@ export const exchangeGoogleAuthCode = functions.https.onCall(async (data, contex
   try {
     const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI);
 
+    functions.logger.log('Attempting to exchange auth code...');
     const { tokens } = await oauth2Client.getToken(code);
 
     if (!tokens.access_token || !tokens.refresh_token || !tokens.expiry_date) {
+      functions.logger.error('Missing tokens from Google response', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        hasExpiryDate: !!tokens.expiry_date
+      });
       throw new Error('Missing required tokens');
     }
 
