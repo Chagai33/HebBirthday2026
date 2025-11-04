@@ -10,13 +10,20 @@ export const googleCalendarService = {
   initiateGoogleOAuth(): Promise<string> {
     return new Promise((resolve, reject) => {
       try {
-        const client = google.accounts.oauth2.initCodeClient({
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+          reject(new Error('Google API טרם נטען. אנא רענן את הדף ונסה שוב'));
+          return;
+        }
+
+        const client = window.google.accounts.oauth2.initCodeClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/calendar.events',
           ux_mode: 'popup',
           callback: (response: any) => {
             if (response.code) {
               resolve(response.code);
+            } else if (response.error) {
+              reject(new Error(`שגיאת Google: ${response.error}`));
             } else {
               reject(new Error('לא התקבל קוד אימות מ-Google'));
             }
