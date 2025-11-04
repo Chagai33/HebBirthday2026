@@ -145,7 +145,6 @@ async function fetchNextHebrewBirthdays(startHebrewYear, hebrewMonth, hebrewDay,
 exports.onBirthdayWrite = functions.firestore
     .document('birthdays/{birthdayId}')
     .onWrite(async (change, context) => {
-    var _a;
     const beforeData = change.before.exists ? change.before.data() : null;
     const afterData = change.after.exists ? change.after.data() : null;
     if (!afterData) {
@@ -232,7 +231,7 @@ exports.onBirthdayWrite = functions.firestore
         return null;
     }
     catch (error) {
-        if (error.code === 5 || ((_a = error.message) === null || _a === void 0 ? void 0 : _a.includes('No document to update'))) {
+        if (error.code === 5 || error.message?.includes('No document to update')) {
             functions.logger.warn('Document no longer exists, skipping update');
             return null;
         }
@@ -255,7 +254,7 @@ exports.refreshBirthdayHebrewData = functions.https.onCall(async (data, context)
     const maxRequests = 3;
     if (rateLimitDoc.exists) {
         const data = rateLimitDoc.data();
-        const requests = (data === null || data === void 0 ? void 0 : data.requests) || [];
+        const requests = data?.requests || [];
         const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
         if (recentRequests.length >= maxRequests) {
             throw new functions.https.HttpsError('resource-exhausted', 'Too many refresh requests. Please wait 30 seconds.');
@@ -276,15 +275,15 @@ exports.refreshBirthdayHebrewData = functions.https.onCall(async (data, context)
             throw new functions.https.HttpsError('not-found', 'Birthday not found');
         }
         const birthdayData = birthdayDoc.data();
-        if ((birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.tenant_id) !== data.tenantId) {
+        if (birthdayData?.tenant_id !== data.tenantId) {
             throw new functions.https.HttpsError('permission-denied', 'Access denied');
         }
-        const birthDateStr = birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.birth_date_gregorian;
+        const birthDateStr = birthdayData?.birth_date_gregorian;
         if (!birthDateStr) {
             throw new functions.https.HttpsError('failed-precondition', 'No birth date found');
         }
         const birthDate = new Date(birthDateStr);
-        const afterSunset = (birthdayData === null || birthdayData === void 0 ? void 0 : birthdayData.after_sunset) || false;
+        const afterSunset = birthdayData?.after_sunset || false;
         const hebcalData = await fetchHebcalData(birthDate, afterSunset);
         if (!hebcalData.hebrew) {
             throw new functions.https.HttpsError('internal', 'Failed to fetch Hebrew date');
@@ -670,7 +669,7 @@ exports.exchangeGoogleAuthCode = functions.https.onCall(async (data, context) =>
     const maxRequests = 5;
     if (rateLimitDoc.exists) {
         const rateLimitData = rateLimitDoc.data();
-        const requests = (rateLimitData === null || rateLimitData === void 0 ? void 0 : rateLimitData.requests) || [];
+        const requests = rateLimitData?.requests || [];
         const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
         if (recentRequests.length >= maxRequests) {
             throw new functions.https.HttpsError('resource-exhausted', 'יותר מדי ניסיונות. אנא המתן דקה');
@@ -718,7 +717,7 @@ exports.syncBirthdayToGoogleCalendar = functions.https.onCall(async (data, conte
     const maxRequests = 30;
     if (rateLimitDoc.exists) {
         const rateLimitData = rateLimitDoc.data();
-        const requests = (rateLimitData === null || rateLimitData === void 0 ? void 0 : rateLimitData.requests) || [];
+        const requests = rateLimitData?.requests || [];
         const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
         if (recentRequests.length >= maxRequests) {
             throw new functions.https.HttpsError('resource-exhausted', 'יותר מדי בקשות. אנא המתן רגע');
@@ -830,7 +829,7 @@ exports.syncMultipleBirthdaysToGoogleCalendar = functions.https.onCall(async (da
     const maxRequests = 3;
     if (rateLimitDoc.exists) {
         const rateLimitData = rateLimitDoc.data();
-        const requests = (rateLimitData === null || rateLimitData === void 0 ? void 0 : rateLimitData.requests) || [];
+        const requests = rateLimitData?.requests || [];
         const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
         if (recentRequests.length >= maxRequests) {
             throw new functions.https.HttpsError('resource-exhausted', 'יותר מדי בקשות סנכרון מרובות. אנא המתן 5 דקות');
@@ -887,7 +886,7 @@ exports.removeBirthdayFromGoogleCalendar = functions.https.onCall(async (data, c
     const maxRequests = 20;
     if (rateLimitDoc.exists) {
         const rateLimitData = rateLimitDoc.data();
-        const requests = (rateLimitData === null || rateLimitData === void 0 ? void 0 : rateLimitData.requests) || [];
+        const requests = rateLimitData?.requests || [];
         const recentRequests = requests.filter((timestamp) => now - timestamp < windowMs);
         if (recentRequests.length >= maxRequests) {
             throw new functions.https.HttpsError('resource-exhausted', 'יותר מדי בקשות. אנא המתן רגע');

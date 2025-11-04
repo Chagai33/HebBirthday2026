@@ -16,19 +16,15 @@ service cloud.firestore {
     }
 
     function isTenantMember(tenantId) {
-      if (!isAuthenticated()) return false;
-      if (hasCustomClaims()) {
-        return getUserTenantId() == tenantId;
-      }
-      return true;
+      return isAuthenticated() &&
+             (hasCustomClaims() ? getUserTenantId() == tenantId : true);
     }
 
     function isTenantOwner(tenantId) {
-      if (!isAuthenticated()) return false;
-      if (hasCustomClaims()) {
-        return getUserTenantId() == tenantId && request.auth.token.role == 'owner';
-      }
-      return get(/databases/$(database)/documents/tenants/$(tenantId)).data.owner_id == request.auth.uid;
+      return isAuthenticated() &&
+             (hasCustomClaims()
+               ? (getUserTenantId() == tenantId && request.auth.token.role == 'owner')
+               : get(/databases/$(database)/documents/tenants/$(tenantId)).data.owner_id == request.auth.uid);
     }
 
     function hasRole(role) {
